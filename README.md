@@ -232,7 +232,8 @@ Så räcker det att lägga `Super Mario All-Stars.png` i
 - Datum och tid visas diskret nere till höger. Andra knappar som B och Y,
   samt tangentbord och mus, väcker launchern utan att aktivera ett menyval.
   Skärmsläckaren startar aldrig ovanpå en extern applikation.
-- Hittas inga foton visas en notis med hänvisning till `screensaver.folders`.
+- Fotomapparna läses om varje gång bildspelet startar. Nya bilder kräver ingen
+  omstart. Hittas inga foton vid manuell start visas en notis.
 
 ## Styrning
 

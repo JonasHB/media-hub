@@ -17,7 +17,7 @@ from .config import ConfigError, load_config
 from .gamepad import Gamepad
 from .handover import Handover
 from .library import apply_library, report_missing_icons
-from .photos import scan_photos
+from .photos import PhotoLibrary
 from .system import SystemActions
 
 APP_ROOT = Path(__file__).resolve().parent.parent
@@ -113,10 +113,6 @@ def main(argv: list[str] | None = None) -> int:
     library_warnings = apply_library(config)
 
     screensaver = config["settings"]["screensaver"]
-    photos: list[str] = []
-    photo_warnings: list[str] = []
-    if screensaver["enabled"]:
-        photos, photo_warnings = scan_photos(screensaver["folders"])
 
     if args.no_log_file:
         log_file = None
@@ -145,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
     context = engine.rootContext()
     context.setContextProperty("configJson", json.dumps(config, ensure_ascii=False))
     context.setContextProperty("startWindowed", args.windowed)
-    context.setContextProperty("slideshowPhotos", json.dumps(photos, ensure_ascii=False))
+    context.setContextProperty("photoLibrary", PhotoLibrary(screensaver["folders"], engine))
     context.setContextProperty("windowWidth", window_width)
     context.setContextProperty("windowHeight", window_height)
     context.setContextProperty(
@@ -185,13 +181,7 @@ def main(argv: list[str] | None = None) -> int:
     library_log = logging.getLogger("mediahub.library")
     for warning in library_warnings:
         library_log.warning("%s", warning)
-    for warning in photo_warnings:
-        library_log.warning("%s", warning)
-    if screensaver["enabled"] and not photos:
-        library_log.info(
-            "skärmsläckaren är på men inga foton hittades i: %s",
-            ", ".join(screensaver["folders"]) or "(inga mappar angivna)",
-        )
+
     for category_id, item_id, title in report_missing_icons(config):
         library_log.info(
             "ingen ikon för %s (%s/%s) - lägg till icons/%s.png i konfigurationsmappen",

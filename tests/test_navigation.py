@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 import sdl2
 from PySide6.QtCore import QPoint, Qt, QUrl
+from mediahub.photos import PhotoLibrary
 from PySide6.QtGui import QImage
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
@@ -43,16 +44,15 @@ assert joystick_index >= 0
 joystick = sdl2.SDL_JoystickOpen(joystick_index)
 gamepad._poll()
 assert gamepad.connected
-photos = []
-for name in ('first', 'second', 'third'):
+for name in ('first', 'second'):
     path = Path(sys.argv[1]) / (name + '.png')
     image = QImage(16, 16, QImage.Format_RGB32)
     image.fill(0)
     assert image.save(str(path))
-    photos.append(path.as_uri())
-config['settings']['screensaver'].update(enabled=True, order='sequential', photo_seconds=10)
+
+config['settings']['screensaver'].update(enabled=True, order='sequential', photo_seconds=10, folders=[sys.argv[1]])
 values = dict(configJson=json.dumps(config), startWindowed=True, windowWidth=800,
-              windowHeight=450, slideshowPhotos=json.dumps(photos), screenshotPath='', screenshotDelay=0,
+              windowHeight=450, photoLibrary=PhotoLibrary([sys.argv[1]], engine), screenshotPath='', screenshotDelay=0,
               launcher=Handover(config, engine), systemActions=SystemActions(app), gamepad=gamepad)
 for key, value in values.items():
     engine.rootContext().setContextProperty(key, value)
@@ -122,6 +122,7 @@ def tilt(axis, direction):
     assert sdl2.SDL_JoystickSetVirtualAxis(joystick, axis, 0) == 0
     gamepad._poll()
 
+assert QImage(str(Path(sys.argv[1]) / 'first.png')).save(str(Path(sys.argv[1]) / 'third.png'))
 press(sdl2.SDL_CONTROLLER_BUTTON_Y)
 assert slideshow.property('currentName') == 'first'
 for control, expected in (

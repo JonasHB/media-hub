@@ -3,10 +3,25 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from PySide6.QtCore import QObject, Slot
+
 log = logging.getLogger(__name__)
 
 PHOTO_SUFFIXES = (".jpg", ".jpeg", ".png", ".webp", ".bmp")
 MAX_PHOTOS = 5000
+
+
+class PhotoLibrary(QObject):
+    def __init__(self, folders: list[str], parent=None):
+        super().__init__(parent)
+        self._folders = folders
+
+    @Slot(result="QStringList")
+    def refresh(self) -> list[str]:
+        photos, warnings = scan_photos(self._folders)
+        for warning in warnings:
+            log.warning("%s", warning)
+        return photos
 
 
 def scan_photos(folders: list[str]) -> tuple[list[str], list[str]]:

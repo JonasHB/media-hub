@@ -34,8 +34,7 @@ Window {
     readonly property var uiLocale: Qt.locale(settings.language === "en" ? "en_GB" : "sv_SE")
     readonly property color accent: (section && section.theme) || currentCategory.theme || "#4d9dff"
     readonly property var ssCfg: settings.screensaver || ({})
-    readonly property var photoList: JSON.parse(slideshowPhotos)
-    readonly property bool ssAvailable: ssCfg.enabled !== false && photoList.length > 0
+    property var photoList: []
     readonly property var footerHints: gamepad.connected
         ? ["\u2190 \u2192  Bläddra", "LB / RB  Kategori", "A  Starta", "Y  Bildspel",
            section ? "B  Tillbaka" : "Start  Meny"]
@@ -69,13 +68,17 @@ Window {
         keyLayer.forceActiveFocus()
     }
 
-    function startSlideshow() {
+    function startSlideshow(automatic) {
         if (ssCfg.enabled === false) {
             toast.show("Skärmsläckaren är avstängd i konfigurationen")
             return
         }
+        photoList = photoLibrary.refresh()
         if (photoList.length === 0) {
-            toast.show("Inga foton hittades – kontrollera screensaver.folders")
+            if (automatic)
+                idleTimer.restart()
+            else
+                toast.show("Inga foton hittades – kontrollera screensaver.folders")
             return
         }
         slideshow.begin()
@@ -531,12 +534,12 @@ Window {
         interval: Math.max(1000, (root.ssCfg.idle_seconds === undefined
             ? 300 : root.ssCfg.idle_seconds) * 1000)
         repeat: false
-        running: root.ssAvailable
+        running: root.ssCfg.enabled !== false
             && (root.ssCfg.idle_seconds === undefined || root.ssCfg.idle_seconds > 0)
             && !launcher.busy
             && !slideshow.active
             && !systemMenu.visible
-        onTriggered: root.startSlideshow()
+        onTriggered: root.startSlideshow(true)
     }
 
     Timer {
