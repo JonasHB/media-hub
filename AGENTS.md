@@ -13,6 +13,8 @@ Ersätter Flex Launcher. Svensk UI-text, engelska identifierare.
   radbryten vid 72. Ingen `Co-Authored-By`.
 - Committa inte hemligheter, `.venv/`, `__pycache__/` eller skärmdumpar.
 - Committa inte om testerna faller; fixa först.
+- Kör `./install.sh` från repots rot efter varje färdig, testad ändring.
+  Verifiera installationen. Starta inte om en aktiv launcher automatiskt.
 
 ## Miljö
 
