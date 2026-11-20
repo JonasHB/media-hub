@@ -6,7 +6,9 @@ Ersätter Flex Launcher. Svensk UI-text, engelska identifierare.
 ## Git
 
 - **Committa alltid ändringar i detta repo** när ett sammanhängande arbete är
-  klart och testerna är gröna. Användaren behöver inte be om det.
+  klart och testerna är gröna. **Pusha sedan alltid till grenens upstream**
+  och verifiera att pushen gick igenom. Användaren behöver inte be om det.
+- Använd inte force-push. Rapportera om pushen blockeras.
 - Conventional Commits, engelska, imperativ, ämnesrad ≤ 50 tecken, body
   radbryten vid 72. Ingen `Co-Authored-By`.
 - Committa inte hemligheter, `.venv/`, `__pycache__/` eller skärmdumpar.
