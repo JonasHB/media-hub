@@ -9,7 +9,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QLocale, Qt, QTimer, QUrl
-from PySide6.QtGui import QGuiApplication, QKeyEvent
+from PySide6.QtGui import QCursor, QGuiApplication, QKeyEvent
 from PySide6.QtQml import QQmlApplicationEngine
 
 from . import __version__
@@ -162,6 +162,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     window = engine.rootObjects()[0]
+    if not args.windowed:
+        window.setCursor(QCursor(Qt.CursorShape.BlankCursor))
     handover.set_launcher_window(window)
     handover.externalActive.connect(lambda _item_id: gamepad.setActive(False))
     handover.externalClosed.connect(lambda _item_id: gamepad.setActive(True))
