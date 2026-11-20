@@ -38,12 +38,19 @@ def minimal_config(**overrides):
 def test_example_config_is_valid():
     config = load_config(EXAMPLE)
     assert [c["id"] for c in config["categories"]] == ["streaming", "games"]
-    assert config["settings"] == {
+    settings = dict(config["settings"])
+    settings.pop("screensaver")
+    assert settings == {
         "fps": 60,
         "animations": True,
         "language": "sv",
         "exit_combo": ["left_shoulder", "right_shoulder"],
     }
+    screensaver = config["settings"]["screensaver"]
+    assert screensaver["idle_seconds"] == 300
+    assert screensaver["photo_seconds"] == 10
+    assert screensaver["order"] == "random"
+    assert len(screensaver["folders"]) == 1
     assert [e["id"] for e in config["emulators"]] == ["snes9x"]
     youtube = find_item(config, "youtube")
     assert youtube["handover"]["type"] == "window"
@@ -122,6 +129,58 @@ def test_icon_is_discovered_from_icons_folder(tmp_path):
     (icons / "youtube.svg").write_text("<svg xmlns='http://www.w3.org/2000/svg'/>")
     config = load_config(write_config(tmp_path, minimal_config()))
     assert config["categories"][0]["items"][0]["icon"] == str((icons / "youtube.svg").resolve())
+
+
+def test_screensaver_defaults_when_absent(tmp_path):
+    config = load_config(write_config(tmp_path, minimal_config()))
+    screensaver = config["settings"]["screensaver"]
+    assert screensaver["enabled"] is True
+    assert screensaver["idle_seconds"] == 300
+    assert screensaver["photo_seconds"] == 10
+    assert screensaver["transition_ms"] == 1200
+    assert screensaver["ken_burns"] is True
+    assert screensaver["folders"] == []
+
+
+def test_screensaver_validation(tmp_path):
+    data = minimal_config(
+        settings={
+            "screensaver": {
+                "photo_seconds": 1,
+                "idle_seconds": -5,
+                "order": "reversed",
+                "folders": "~/Pictures",
+            }
+        }
+    )
+    with pytest.raises(ConfigError) as excinfo:
+        load_config(write_config(tmp_path, data))
+    message = str(excinfo.value)
+    assert "photo_seconds" in message
+    assert "idle_seconds" in message
+    assert "order" in message
+    assert "folders" in message
+
+
+def test_screensaver_show_filename(tmp_path):
+    config = load_config(write_config(tmp_path, minimal_config()))
+    assert config["settings"]["screensaver"]["show_filename"] is False
+
+    data = minimal_config(settings={"screensaver": {"show_filename": True}})
+    config = load_config(write_config(tmp_path, data))
+    assert config["settings"]["screensaver"]["show_filename"] is True
+
+    bad = minimal_config(settings={"screensaver": {"show_filename": "yes"}})
+    with pytest.raises(ConfigError, match="show_filename"):
+        load_config(write_config(tmp_path, bad))
+
+
+def test_screensaver_folders_are_resolved(tmp_path):
+    data = minimal_config(settings={"screensaver": {"folders": ["photos"]}})
+    config = load_config(write_config(tmp_path, data))
+    assert config["settings"]["screensaver"]["folders"] == [
+        str((tmp_path / "photos").resolve())
+    ]
 
 
 def test_theme_must_be_a_colour(tmp_path):

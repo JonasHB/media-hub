@@ -25,9 +25,29 @@ Window {
     readonly property color accent: currentCategory && currentCategory.theme
         ? currentCategory.theme
         : "#4d9dff"
+    readonly property var ssCfg: settings.screensaver || ({})
+    readonly property var photoList: JSON.parse(slideshowPhotos)
+    readonly property bool ssAvailable: ssCfg.enabled !== false && photoList.length > 0
     readonly property var footerHints: gamepad.connected
-        ? ["\u2190 \u2192  Bläddra", "LB / RB  Kategori", "A  Starta"]
-        : ["\u2190 \u2192  Bläddra", "\u2191 \u2193  Kategori", "Enter  Starta"]
+        ? ["\u2190 \u2192  Bläddra", "LB / RB  Kategori", "A  Starta", "Y  Bildspel"]
+        : ["\u2190 \u2192  Bläddra", "\u2191 \u2193  Kategori", "Enter  Starta", "S  Bildspel"]
+
+    function noteActivity() {
+        if (idleTimer.running)
+            idleTimer.restart()
+    }
+
+    function startSlideshow() {
+        if (ssCfg.enabled === false) {
+            toast.show("Skärmsläckaren är avstängd i konfigurationen")
+            return
+        }
+        if (photoList.length === 0) {
+            toast.show("Inga foton hittades – kontrollera screensaver.folders")
+            return
+        }
+        slideshow.begin()
+    }
 
     function tileIndexFor(catIndex) {
         var items = cfg.categories[catIndex].items
@@ -44,11 +64,21 @@ Window {
     }
 
     function selectCategory(index) {
+        if (slideshow.active) {
+            slideshow.wake()
+            return
+        }
+        noteActivity()
         categoryIndex = index
         Qt.callLater(function() { tileList.centerOn(root.tileIndexFor(root.categoryIndex)) })
     }
 
     function moveTile(delta) {
+        if (slideshow.active) {
+            slideshow.wake()
+            return
+        }
+        noteActivity()
         var count = currentItems.length
         if (count === 0)
             return
@@ -63,6 +93,11 @@ Window {
     }
 
     function activate(index) {
+        if (slideshow.active) {
+            slideshow.wake()
+            return
+        }
+        noteActivity()
         if (launcher.busy)
             return
         if (typeof index === "number")
@@ -85,7 +120,7 @@ Window {
     SparkField {
         anchors.fill: parent
         s: root.s
-        running: root.animations
+        running: root.animations && !slideshow.active
         sparkCount: settings.fps === 30 ? 12 : 22
     }
 
@@ -94,12 +129,26 @@ Window {
         anchors.fill: parent
         focus: true
 
+        Keys.onPressed: function(event) {
+            root.noteActivity()
+            if (event.key === Qt.Key_S && !slideshow.active) {
+                root.startSlideshow()
+                event.accepted = true
+            }
+        }
         Keys.onLeftPressed: root.moveTile(-1)
         Keys.onRightPressed: root.moveTile(1)
         Keys.onUpPressed: root.changeCategory(-1)
         Keys.onDownPressed: root.changeCategory(1)
         Keys.onReturnPressed: root.activate()
         Keys.onEnterPressed: root.activate()
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+            onPositionChanged: root.noteActivity()
+        }
 
         Component.onCompleted: {
             keyLayer.forceActiveFocus()
@@ -245,7 +294,10 @@ Window {
                             focused: index === root.tileIndexFor(root.categoryIndex)
                             animations: root.animations
                             animMs: root.animMs
-                            onHovered: root.setTileIndex(root.categoryIndex, index)
+                            onHovered: {
+                                root.noteActivity()
+                                root.setTileIndex(root.categoryIndex, index)
+                            }
                             onActivated: root.activate(index)
                         }
                     }
@@ -292,9 +344,57 @@ Window {
 
     Connections {
         target: gamepad
-        function onNavigate(direction) { root.moveTile(direction) }
-        function onCategoryStep(direction) { root.changeCategory(direction) }
-        function onSelectPressed() { root.activate() }
+        function onNavigate(direction) {
+            if (slideshow.active) { slideshow.wake(); return }
+            root.moveTile(direction)
+        }
+        function onCategoryStep(direction) {
+            if (slideshow.active) { slideshow.wake(); return }
+            root.changeCategory(direction)
+        }
+        function onSelectPressed() {
+            if (slideshow.active) { slideshow.wake(); return }
+            root.activate()
+        }
+        function onScreensaverPressed() {
+            if (slideshow.active) slideshow.wake()
+            else root.startSlideshow()
+        }
+        function onGuidePressed() {
+            if (slideshow.active) slideshow.wake()
+        }
+        function onBackPressed() {
+            if (slideshow.active) slideshow.wake()
+        }
+    }
+
+    Slideshow {
+        id: slideshow
+        anchors.fill: parent
+        s: root.s
+        photos: root.photoList
+        photoSeconds: root.ssCfg.photo_seconds === undefined ? 10 : root.ssCfg.photo_seconds
+        transitionMs: root.ssCfg.transition_ms === undefined ? 1200 : root.ssCfg.transition_ms
+        kenBurns: root.ssCfg.ken_burns !== false
+        order: root.ssCfg.order || "random"
+        showFilename: root.ssCfg.show_filename === true
+        dateLocale: root.uiLocale
+        onClosed: {
+            root.noteActivity()
+            keyLayer.forceActiveFocus()
+        }
+    }
+
+    Timer {
+        id: idleTimer
+        interval: Math.max(1000, (root.ssCfg.idle_seconds === undefined
+            ? 300 : root.ssCfg.idle_seconds) * 1000)
+        repeat: false
+        running: root.ssAvailable
+            && (root.ssCfg.idle_seconds === undefined || root.ssCfg.idle_seconds > 0)
+            && !launcher.busy
+            && !slideshow.active
+        onTriggered: root.startSlideshow()
     }
 
     Timer {

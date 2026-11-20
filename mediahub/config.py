@@ -149,7 +149,7 @@ def validate(raw: Any, base_dir: Path) -> dict:
     elif v.integer(version, "version", 1, 1 << 30) != CONFIG_VERSION:
         v.err("version", f"unsupported version {version!r}, expected {CONFIG_VERSION}")
 
-    settings = _validate_settings(v, cfg.get("settings", {}), "settings")
+    settings = _validate_settings(v, cfg.get("settings", {}), "settings", base_dir)
     categories = _validate_categories(v, cfg.get("categories"), base_dir)
     category_ids = {category["id"] for category in categories}
     emulators = _validate_emulators(v, cfg.get("emulators"), base_dir, category_ids)
@@ -165,12 +165,12 @@ def validate(raw: Any, base_dir: Path) -> dict:
     }
 
 
-def _validate_settings(v: _Validator, value: Any, path: str) -> dict:
+def _validate_settings(v: _Validator, value: Any, path: str, base_dir: Path) -> dict:
     obj = v.object(value, path)
     if obj is None:
         return {"fps": 60, "animations": True}
 
-    v.unknown_keys(obj, {"fps", "animations", "language", "exit_combo"}, path)
+    v.unknown_keys(obj, {"fps", "animations", "language", "exit_combo", "screensaver"}, path)
 
     fps = obj.get("fps", 60)
     if fps not in (30, 60):
@@ -183,12 +183,81 @@ def _validate_settings(v: _Validator, value: Any, path: str) -> dict:
         v.err(_join(path, "language"), "must be 'sv' or 'en'")
 
     exit_combo = _validate_exit_combo(v, obj.get("exit_combo"), _join(path, "exit_combo"))
+    screensaver = _validate_screensaver(
+        v, obj.get("screensaver"), _join(path, "screensaver"), base_dir
+    )
 
     return {
         "fps": fps if fps in (30, 60) else 60,
         "animations": True if animations is None else animations,
         "language": language if language in ("sv", "en") else "sv",
         "exit_combo": exit_combo,
+        "screensaver": screensaver,
+    }
+
+
+def _validate_screensaver(
+    v: _Validator, value: Any, path: str, base_dir: Path
+) -> dict:
+    defaults = {
+        "enabled": True,
+        "idle_seconds": 300,
+        "photo_seconds": 10,
+        "transition_ms": 1200,
+        "ken_burns": True,
+        "order": "random",
+        "folders": [],
+        "show_filename": False,
+    }
+    if value is None:
+        return defaults
+
+    obj = v.object(value, path)
+    if obj is None:
+        return defaults
+
+    v.unknown_keys(
+        obj,
+        {
+            "enabled", "idle_seconds", "photo_seconds", "transition_ms",
+            "ken_burns", "order", "folders", "show_filename",
+        },
+        path,
+    )
+
+    enabled = v.boolean(obj.get("enabled", True), _join(path, "enabled"))
+    idle = v.integer(obj.get("idle_seconds", 300), _join(path, "idle_seconds"), 0, 86400)
+    photo = v.integer(obj.get("photo_seconds", 10), _join(path, "photo_seconds"), 3, 600)
+    transition = v.integer(obj.get("transition_ms", 1200), _join(path, "transition_ms"), 0, 10000)
+    ken_burns = v.boolean(obj.get("ken_burns", True), _join(path, "ken_burns"))
+    show_filename = v.boolean(
+        obj.get("show_filename", False), _join(path, "show_filename")
+    )
+
+    order = obj.get("order", "random")
+    if order not in ("random", "sequential"):
+        v.err(_join(path, "order"), f"must be 'random' or 'sequential', got {order!r}")
+        order = "random"
+
+    folders: list[str] = []
+    raw_folders = obj.get("folders", [])
+    if not isinstance(raw_folders, list):
+        v.err(_join(path, "folders"), f"must be an array of directories, got {_kind(raw_folders)}")
+    else:
+        for index, folder in enumerate(raw_folders):
+            folder_value = v.string(folder, f"{path}.folders[{index}]")
+            if folder_value is not None:
+                folders.append(_resolve(base_dir, folder_value))
+
+    return {
+        "enabled": True if enabled is None else enabled,
+        "idle_seconds": 300 if idle is None else idle,
+        "photo_seconds": 10 if photo is None else photo,
+        "transition_ms": 1200 if transition is None else transition,
+        "ken_burns": True if ken_burns is None else ken_burns,
+        "order": order,
+        "folders": folders,
+        "show_filename": False if show_filename is None else show_filename,
     }
 
 

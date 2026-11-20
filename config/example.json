@@ -7,7 +7,19 @@
     "exit_combo": [
       "left_shoulder",
       "right_shoulder"
-    ]
+    ],
+    "screensaver": {
+      "enabled": true,
+      "idle_seconds": 300,
+      "photo_seconds": 10,
+      "transition_ms": 1200,
+      "ken_burns": true,
+      "order": "random",
+      "folders": [
+        "~/Pictures"
+      ],
+      "show_filename": false
+    }
   },
   "categories": [
     {

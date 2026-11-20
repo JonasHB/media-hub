@@ -59,6 +59,7 @@ class Gamepad(QObject):
     backPressed = Signal()
     systemMenuPressed = Signal()
     guidePressed = Signal()
+    screensaverPressed = Signal()
     exitComboPressed = Signal()
     connectedChanged = Signal()
 
@@ -195,6 +196,7 @@ class Gamepad(QObject):
             "left_shoulder": lambda: self.categoryStep.emit(-1),
             "right_shoulder": lambda: self.categoryStep.emit(1),
             "start": self.systemMenuPressed.emit,
+            "y": self.screensaverPressed.emit,
         }
 
         for name, button in BUTTONS.items():

@@ -15,8 +15,8 @@ MVP enligt briefens prioriterade leverans steg 1–4:
 
 Steam Big Picture finns som konfigurerad post och startar som vanligt program.
 Animerad bakgrund (mjuka glödpartiklar och långsamma färgskiftningar), per-kategori
-accentfärg och skalning upp till 4K är klart. Foto-skärmsläckare, eget
-skärmtangentbord och röststyrning återstår.
+accentfärg, skalning upp till 4K och foto-skärmsläckare är klart.
+Eget skärmtangentbord och röststyrning återstår.
 
 ## Krav
 
@@ -144,6 +144,7 @@ samtidigt. Relativa sökvägar tolkas relativt konfigurationsfilen, `~` expander
   extern applikation (Guide-knappen fungerar också när den kan läsas).
 - `theme` per kategori är en accentfärg (`#4d9dff`, `#f2a54a`, ...) som styr
   fokusram, glöd och kategoristreck. Utan tema används blått.
+- `screensaver` styr foto-skärmsläckaren, se nedan.
 - `settings.animations: false` stänger av rörliga partiklar och övergångar;
   `settings.fps: 30` ger färre partiklar och lämpar sig för 4K/30 Hz-läget.
 
@@ -167,6 +168,36 @@ Spelomslag hittas automatiskt, i den här ordningen:
 
 Så räcker det att lägga `Super Mario All-Stars.png` i
 `~/snes/media/covers/`. Saknade omslag får bokstavsikon och loggas.
+
+### Skärmsläckare (bildspel)
+
+```json
+"screensaver": {
+  "enabled": true,
+  "idle_seconds": 300,
+  "photo_seconds": 10,
+  "transition_ms": 1200,
+  "ken_burns": true,
+  "order": "random",
+  "folders": ["~/Pictures", "/media/foton"],
+  "show_filename": false
+}
+```
+
+- Startar automatiskt efter `idle_seconds` sekunder utan inmatning.
+  `0` stänger av auto-start men låter knappen starta manuellt.
+- Manuell start: **Y** på handkontrollen eller **S** på tangentbordet.
+- `photo_seconds` är visningstid per foto, `transition_ms` mjuk övertoning,
+  `ken_burns` ger långsam zoom, `order` är `random` (slumpmässigt urval,
+  ny blandning per varv) eller `sequential`.
+- `folders` skannas rekursivt efter `jpg`, `jpeg`, `png`, `webp` och `bmp`.
+  Videofiler och dolda filer ignoreras. Saknade mappar loggas.
+- `show_filename: true` visar även fotots filnamn (utan ändelse) diskret under
+  datumet. Av som standard.
+- Datum och tid visas diskret nere till höger. Första knapptryck, musklick
+  eller knapp på handkontrollen väcker launchern **utan** att aktivera något
+  menyval. Skärmsläckaren startar aldrig ovanpå en extern applikation.
+- Hittas inga foton visas en notis med hänvisning till `screensaver.folders`.
 
 ## Handover och AntiMicroX
 
@@ -219,4 +250,6 @@ Gamepad testas med SDL:s virtuella handkontroll. Skärmdumpar kan verifieras med
 - [ ] Snes9x: ROM startar i helskärm och avslutas kontrollerat (sparfiler skrivs).
 - [ ] Prestanda: 60 FPS på i5-3570/GTX 660 Ti, 30 FPS-läge och `animations: false`.
 - [ ] Hög upplösning: 1080p/60 och 4K/30 (HDMI-begränsning), skarp text och inget avklippt.
+- [ ] Bildspel: auto-start efter inställd tid, Y/S-knappen, mjuka byten,
+  diskret klocka och väckning utan oavsiktligt menyval.
 - [ ] Flex Launcher fungerar fortfarande tills nya launchern är godkänd.
