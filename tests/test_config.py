@@ -48,7 +48,7 @@ def test_example_config_is_valid():
     }
     screensaver = config["settings"]["screensaver"]
     assert screensaver["idle_seconds"] == 300
-    assert screensaver["photo_seconds"] == 10
+    assert screensaver["photo_seconds"] == 6
     assert screensaver["order"] == "random"
     assert len(screensaver["folders"]) == 1
     assert [e["id"] for e in config["emulators"]] == ["snes9x"]
@@ -138,7 +138,7 @@ def test_screensaver_defaults_when_absent(tmp_path):
     screensaver = config["settings"]["screensaver"]
     assert screensaver["enabled"] is True
     assert screensaver["idle_seconds"] == 300
-    assert screensaver["photo_seconds"] == 10
+    assert screensaver["photo_seconds"] == 6
     assert screensaver["transition_ms"] == 1200
     assert screensaver["ken_burns"] is True
     assert screensaver["folders"] == []

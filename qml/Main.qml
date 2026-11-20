@@ -485,7 +485,7 @@ Window {
         anchors.fill: parent
         s: root.s
         photos: root.photoList
-        photoSeconds: root.ssCfg.photo_seconds === undefined ? 10 : root.ssCfg.photo_seconds
+        photoSeconds: root.ssCfg.photo_seconds === undefined ? 6 : root.ssCfg.photo_seconds
         transitionMs: root.ssCfg.transition_ms === undefined ? 1200 : root.ssCfg.transition_ms
         kenBurns: root.ssCfg.ken_burns !== false
         order: root.ssCfg.order || "random"

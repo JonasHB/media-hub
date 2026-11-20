@@ -206,7 +206,7 @@ Så räcker det att lägga `Super Mario All-Stars.png` i
 "screensaver": {
   "enabled": true,
   "idle_seconds": 300,
-  "photo_seconds": 10,
+  "photo_seconds": 6,
   "transition_ms": 1200,
   "ken_burns": true,
   "order": "random",

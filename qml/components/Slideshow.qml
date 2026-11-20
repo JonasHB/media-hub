@@ -3,7 +3,7 @@ import QtQuick
 FocusScope {
     id: view
     property var photos: []
-    property int photoSeconds: 10
+    property int photoSeconds: 6
     property real durationAdjustment: 0
     readonly property real displaySeconds: photoSeconds + durationAdjustment
     readonly property int displayMs: Math.round(displaySeconds * 1000)

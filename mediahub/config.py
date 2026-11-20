@@ -204,7 +204,7 @@ def _validate_screensaver(
     defaults = {
         "enabled": True,
         "idle_seconds": 300,
-        "photo_seconds": 10,
+        "photo_seconds": 6,
         "transition_ms": 1200,
         "ken_burns": True,
         "order": "random",
@@ -229,7 +229,7 @@ def _validate_screensaver(
 
     enabled = v.boolean(obj.get("enabled", True), _join(path, "enabled"))
     idle = v.integer(obj.get("idle_seconds", 300), _join(path, "idle_seconds"), 0, 86400)
-    photo = v.integer(obj.get("photo_seconds", 10), _join(path, "photo_seconds"), 3, 600)
+    photo = v.integer(obj.get("photo_seconds", 6), _join(path, "photo_seconds"), 3, 600)
     transition = v.integer(obj.get("transition_ms", 1200), _join(path, "transition_ms"), 0, 10000)
     ken_burns = v.boolean(obj.get("ken_burns", True), _join(path, "ken_burns"))
     show_filename = v.boolean(
@@ -254,7 +254,7 @@ def _validate_screensaver(
     return {
         "enabled": True if enabled is None else enabled,
         "idle_seconds": 300 if idle is None else idle,
-        "photo_seconds": 10 if photo is None else photo,
+        "photo_seconds": 6 if photo is None else photo,
         "transition_ms": 1200 if transition is None else transition,
         "ken_burns": True if ken_burns is None else ken_burns,
         "order": order,
