@@ -354,7 +354,11 @@ Window {
 
                 Behavior on contentX {
                     enabled: root.animations
-                    NumberAnimation { duration: root.animMs; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        id: tileScroll
+                        duration: root.animMs
+                        easing.type: Easing.OutCubic
+                    }
                 }
 
                 function centerOn(index) {
@@ -386,6 +390,8 @@ Window {
                             animations: root.animations
                             animMs: root.animMs
                             onHovered: {
+                                if (!root.showPointer || tileScroll.running)
+                                    return
                                 root.noteActivity()
                                 root.setTileIndex(index)
                             }

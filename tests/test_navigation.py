@@ -6,6 +6,8 @@ from pathlib import Path
 
 def test_console_navigation(tmp_path):
     (tmp_path / "Harvest Moon.sfc").touch()
+    for index in range(12):
+        (tmp_path / f"Test Game {index:02}.sfc").touch()
     root = Path(__file__).resolve().parents[1]
     result = subprocess.run(
         [sys.executable, "-c", """
@@ -14,7 +16,7 @@ import os
 import sys
 from pathlib import Path
 import sdl2
-from PySide6.QtCore import Qt, QUrl
+from PySide6.QtCore import QPoint, Qt, QUrl
 from PySide6.QtGui import QImage
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
@@ -80,12 +82,20 @@ for item, logo in zip(items[1:], ['snes.svg', 'nes.svg', 'wii.svg', 'folder.svg'
 QTest.keyClick(window, Qt.Key_Right)
 QTest.keyClick(window, Qt.Key_Return)
 assert window.property('sectionTitle') == 'Super Nintendo'
-assert [item['title'] for item in window.property('currentItems').toVariant()] == ['Harvest Moon', 'Tillbaka']
+titles = [item['title'] for item in window.property('currentItems').toVariant()]
+assert titles == ['Harvest Moon', *(f'Test Game {i:02}' for i in range(12)), 'Tillbaka']
+for direction, expected in [(1, 1), (1, 2), (-1, 1), (-1, 0)]:
+    gamepad.navigate.emit(direction)
+    QTest.qWait(50)
+    QTest.mouseMove(window, QPoint(340, 225))
+    QTest.mouseMove(window, QPoint(560, 225))
+    QTest.qWait(300)
+    assert window.property('tileIndexes').toVariant().get('snes', 0) == expected
 arrow = image_for(window.contentItem(), 'back-arrow.svg')
 assert arrow is not None and arrow.isVisible()
 button = arrow.parentItem()
 assert button.width() == button.height() and button.property('radius') == button.width() / 2
-QTest.keyClick(window, Qt.Key_Right)
+QTest.keyClick(window, Qt.Key_Left)
 QTest.keyClick(window, Qt.Key_Return)
 assert window.property('sectionTitle') == ''
 QTest.keyClick(window, Qt.Key_Return)
