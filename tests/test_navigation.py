@@ -12,6 +12,7 @@ def test_console_navigation(tmp_path):
 import json
 import sys
 from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QImage
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtTest import QTest
@@ -22,6 +23,7 @@ from mediahub.library import apply_library
 from mediahub.system import SystemActions
 
 config = load_config('config/example.json')
+config['categories'][1]['subcategories'].append({'id': 'other', 'title': 'Other', 'items': []})
 config['emulators'][0]['rom_dirs'] = [sys.argv[1]]
 assert apply_library(config) == []
 app = QGuiApplication([])
@@ -36,6 +38,11 @@ engine.load(QUrl.fromLocalFile('qml/Main.qml'))
 window = engine.rootObjects()[0]
 QTest.qWait(50)
 QTest.keyClick(window, Qt.Key_PageDown)
+items = window.property('currentItems').toVariant()
+for item, logo in zip(items[1:], ['snes.svg', 'nes.svg', 'folder.svg'], strict=True):
+    assert item['section']
+    url = item['icon']
+    assert url.fileName() == logo and not QImage(url.toLocalFile()).isNull()
 QTest.keyClick(window, Qt.Key_Right)
 QTest.keyClick(window, Qt.Key_Return)
 assert window.property('sectionTitle') == 'Super Nintendo'

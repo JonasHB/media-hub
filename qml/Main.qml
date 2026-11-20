@@ -26,7 +26,9 @@ Window {
     readonly property var currentItems: section
         ? section.items.concat([{title: "Tillbaka", back: true}])
         : currentCategory.items.concat((currentCategory.subcategories || []).map(function(child) {
-            return {title: child.title, subtitle: "Öppna kategori", section: child}
+            var asset = child.id === "snes" || child.id === "nes" ? child.id : "folder"
+            return {title: child.title, subtitle: "Öppna kategori", section: child,
+                    icon: Qt.resolvedUrl("assets/" + asset + ".svg")}
         }))
     readonly property real s: Math.min(width / 1280, height / 720)
     readonly property var uiLocale: Qt.locale(settings.language === "en" ? "en_GB" : "sv_SE")
@@ -377,6 +379,7 @@ Window {
                             title: modelData.title
                             subtitle: modelData.subtitle || ""
                             iconSource: modelData.icon || ""
+                            folder: !!modelData.section
                             focused: index === root.tileIndexFor()
                             showPointer: root.showPointer
                             animations: root.animations

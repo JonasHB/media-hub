@@ -5,6 +5,7 @@ Item {
     property string title: ""
     property string subtitle: ""
     property string iconSource: ""
+    property bool folder: false
     property bool focused: false
     property bool animations: true
     property bool showPointer: true
@@ -88,6 +89,24 @@ Item {
                     font.pixelSize: 64 * tile.s
                     font.bold: true
                 }
+            }
+        }
+
+        Rectangle {
+            visible: tile.folder
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: 12 * tile.s
+            width: 34 * tile.s
+            height: width
+            radius: 9 * tile.s
+            color: "#0d1220"
+
+            Image {
+                anchors.centerIn: parent
+                width: 20 * tile.s
+                height: width
+                source: "../assets/folder.svg"
             }
         }
 
