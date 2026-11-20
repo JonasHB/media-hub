@@ -10,6 +10,7 @@ def test_console_navigation(tmp_path):
     result = subprocess.run(
         [sys.executable, "-c", """
 import json
+import os
 import sys
 from pathlib import Path
 import sdl2
@@ -125,10 +126,34 @@ for control, expected in (
     assert slideshow.property('active')
     assert slideshow.property('currentName') == expected
 press(sdl2.SDL_CONTROLLER_BUTTON_DPAD_UP)
-assert slideshow.property('displaySeconds') == 11
+assert slideshow.property('displaySeconds') == 10.5
 tilt(sdl2.SDL_CONTROLLER_AXIS_RIGHTY, 1)
 assert slideshow.property('displaySeconds') == 10
-assert slideshow.property('currentName') == 'first'
+feedback = next(child for child in slideshow.childItems()
+                if child.objectName() == 'durationFeedback')
+assert feedback.property('text') == '10.0s' and feedback.opacity() == 1
+press(sdl2.SDL_CONTROLLER_BUTTON_A)
+assert slideshow.property('paused') and slideshow.property('active')
+for _ in range(20):
+    press(sdl2.SDL_CONTROLLER_BUTTON_DPAD_DOWN)
+assert slideshow.property('displaySeconds') == 0.5
+assert feedback.property('text') == '0.5s'
+if screenshot := os.environ.get('SLIDESHOW_TEST_SCREENSHOT'):
+    QTest.qWait(100)
+    assert window.grabWindow().save(screenshot)
+QTest.qWait(1750)
+assert slideshow.property('currentName') == 'first' and feedback.opacity() == 1
+QTest.qWait(700)
+assert feedback.opacity() == 0
+press(sdl2.SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)
+assert slideshow.property('currentName') == 'second' and slideshow.property('paused')
+press(sdl2.SDL_CONTROLLER_BUTTON_A)
+assert not slideshow.property('paused') and slideshow.property('active')
+for _ in range(70):
+    if slideshow.property('currentName') == 'third':
+        break
+    QTest.qWait(20)
+assert slideshow.property('currentName') == 'third'
 press(sdl2.SDL_CONTROLLER_BUTTON_B)
 assert not slideshow.property('active')
 sdl2.SDL_JoystickClose(joystick)

@@ -456,7 +456,7 @@ Window {
         }
         function onSelectPressed() {
             if (systemMenu.visible) { systemMenu.activate(); return }
-            if (slideshow.active) { slideshow.wake(); return }
+            if (slideshow.active) { slideshow.togglePause(); return }
             root.activate()
         }
         function onSystemMenuPressed() {

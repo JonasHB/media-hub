@@ -226,9 +226,10 @@ Så räcker det att lägga `Super Mario All-Stars.png` i
 - `show_filename: true` visar även fotots filnamn (utan ändelse) diskret under
   datumet. Av som standard.
 - Styrkorset och båda spakarna bläddrar åt vänster/höger; LB/RB visar
-  föregående/nästa foto. Upp/ned ökar/minskar visningstiden med en sekund
-  (3–600 sekunder) fram till nästa omstart av Media Hub.
-- Datum och tid visas diskret nere till höger. Andra knappar som A, B och Y,
+  föregående/nästa foto. Upp/ned ändrar visningstiden i steg om 0,5 sekunder
+  (0,5–600 sekunder) och visar den nya tiden i två sekunder innan den tonas ut.
+  A pausar eller fortsätter automatisk bläddring; manuell bläddring fungerar även i paus.
+- Datum och tid visas diskret nere till höger. Andra knappar som B och Y,
   samt tangentbord och mus, väcker launchern utan att aktivera ett menyval.
   Skärmsläckaren startar aldrig ovanpå en extern applikation.
 - Hittas inga foton visas en notis med hänvisning till `screensaver.folders`.

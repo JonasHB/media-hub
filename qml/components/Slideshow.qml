@@ -4,8 +4,13 @@ FocusScope {
     id: view
     property var photos: []
     property int photoSeconds: 10
-    property int durationAdjustment: 0
-    readonly property int displaySeconds: photoSeconds + durationAdjustment
+    property real durationAdjustment: 0
+    readonly property real displaySeconds: photoSeconds + durationAdjustment
+    readonly property int displayMs: Math.round(displaySeconds * 1000)
+    readonly property int fadeMs: Math.min(transitionMs, Math.floor(displayMs / 2))
+    property bool paused: false
+    property int remainingMs: 0
+    property double deadlineMs: 0
     property int transitionMs: 1200
     property bool kenBurns: true
     property string order: "random"
@@ -56,8 +61,31 @@ FocusScope {
         kbAnimation.target = layer
         kbAnimation.from = 1.0
         kbAnimation.to = kenBurns ? 1.07 : 1.0
-        kbAnimation.duration = displaySeconds * 1000 + transitionMs
+        kbAnimation.duration = displayMs + fadeMs
         kbAnimation.restart()
+        if (paused)
+            kbAnimation.pause()
+    }
+
+    function startCountdown(ms) {
+        remainingMs = Math.max(1, ms)
+        if (!paused && active) {
+            advanceTimer.interval = remainingMs
+            deadlineMs = Date.now() + remainingMs
+            advanceTimer.restart()
+        }
+    }
+
+    function togglePause() {
+        paused = !paused
+        if (paused) {
+            remainingMs = Math.max(1, deadlineMs - Date.now())
+            advanceTimer.stop()
+            kbAnimation.pause()
+        } else {
+            kbAnimation.resume()
+            startCountdown(remainingMs)
+        }
     }
 
     function begin() {
@@ -74,7 +102,7 @@ FocusScope {
         armed = false
         armTimer.restart()
         forceActiveFocus()
-        advanceTimer.restart()
+        startCountdown(displayMs)
     }
 
     function wake() {
@@ -83,14 +111,20 @@ FocusScope {
         active = false
         advanceTimer.stop()
         kbAnimation.stop()
+        paused = false
+        durationFade.stop()
+        durationFeedback.opacity = 0
         layerA.source = ""
         layerB.source = ""
         closed()
     }
 
     function adjustDuration(delta) {
-        durationAdjustment = Math.max(3, Math.min(600, displaySeconds + delta)) - photoSeconds
-        advanceTimer.restart()
+        durationAdjustment = Math.max(0.5, Math.min(600, displaySeconds + delta * 0.5)) - photoSeconds
+        startCountdown(displayMs)
+        durationFade.stop()
+        durationFeedback.opacity = 1
+        durationFade.start()
     }
 
     function step(direction, reshuffle) {
@@ -111,7 +145,7 @@ FocusScope {
             frontIsA = true
             restartKenBurns(layerA)
         }
-        advanceTimer.restart()
+        startCountdown(displayMs)
     }
 
     function advance() {
@@ -141,7 +175,7 @@ FocusScope {
         opacity: view.frontIsA ? 1 : 0
 
         Behavior on opacity {
-            NumberAnimation { duration: view.transitionMs; easing.type: Easing.InOutSine }
+            NumberAnimation { duration: view.fadeMs; easing.type: Easing.InOutSine }
         }
 
         onStatusChanged: {
@@ -161,7 +195,7 @@ FocusScope {
         opacity: view.frontIsA ? 0 : 1
 
         Behavior on opacity {
-            NumberAnimation { duration: view.transitionMs; easing.type: Easing.InOutSine }
+            NumberAnimation { duration: view.fadeMs; easing.type: Easing.InOutSine }
         }
 
         onStatusChanged: {
@@ -220,6 +254,34 @@ FocusScope {
         }
     }
 
+    Text {
+        id: pauseLabel
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.margins: 46 * view.s
+        visible: view.paused
+        text: "Pausad"
+        color: "#f2f6fd"
+        font.pixelSize: 24 * view.s
+    }
+
+    Text {
+        id: durationFeedback
+        objectName: "durationFeedback"
+        anchors.left: pauseLabel.left
+        anchors.bottom: view.paused ? pauseLabel.top : pauseLabel.bottom
+        text: view.displaySeconds.toFixed(1) + "s"
+        color: "#f2f6fd"
+        font.pixelSize: 28 * view.s
+        opacity: 0
+    }
+
+    SequentialAnimation {
+        id: durationFade
+        PauseAnimation { duration: 2000 }
+        NumberAnimation { target: durationFeedback; property: "opacity"; to: 0; duration: 250 }
+    }
+
     Keys.onPressed: function(event) {
         if (view.armed)
             view.wake()
@@ -245,9 +307,6 @@ FocusScope {
 
     Timer {
         id: advanceTimer
-        interval: view.displaySeconds * 1000
-        repeat: true
-        running: view.active
         onTriggered: view.advance()
     }
 
