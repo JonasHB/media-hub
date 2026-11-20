@@ -1,0 +1,318 @@
+import QtQuick
+import QtQuick.Window
+import "components"
+
+Window {
+    id: root
+    visible: true
+    visibility: startWindowed ? Window.Windowed : Window.FullScreen
+    width: startWindowed ? windowWidth : Screen.width
+    height: startWindowed ? windowHeight : Screen.height
+    title: "Media Hub"
+    color: "#04060b"
+
+    property var cfg: JSON.parse(configJson)
+    property var settings: cfg.settings || ({})
+    property bool animations: settings.animations !== false
+    property int animMs: animations ? 240 : 0
+    property int categoryIndex: 0
+    property var tileIndexes: []
+    property date now: new Date()
+    readonly property var currentCategory: cfg.categories[categoryIndex]
+    readonly property var currentItems: currentCategory.items
+    readonly property real s: Math.min(width / 1280, height / 720)
+    readonly property var uiLocale: Qt.locale(settings.language === "en" ? "en_GB" : "sv_SE")
+    readonly property color accent: currentCategory && currentCategory.theme
+        ? currentCategory.theme
+        : "#4d9dff"
+    readonly property var footerHints: gamepad.connected
+        ? ["\u2190 \u2192  Bläddra", "LB / RB  Kategori", "A  Starta"]
+        : ["\u2190 \u2192  Bläddra", "\u2191 \u2193  Kategori", "Enter  Starta"]
+
+    function tileIndexFor(catIndex) {
+        var items = cfg.categories[catIndex].items
+        var idx = tileIndexes[catIndex]
+        if (typeof idx !== "number" || idx < 0 || idx >= items.length)
+            return 0
+        return idx
+    }
+
+    function setTileIndex(catIndex, index) {
+        var copy = tileIndexes.slice()
+        copy[catIndex] = index
+        tileIndexes = copy
+    }
+
+    function selectCategory(index) {
+        categoryIndex = index
+        Qt.callLater(function() { tileList.centerOn(root.tileIndexFor(root.categoryIndex)) })
+    }
+
+    function moveTile(delta) {
+        var count = currentItems.length
+        if (count === 0)
+            return
+        var next = (tileIndexFor(categoryIndex) + delta + count) % count
+        setTileIndex(categoryIndex, next)
+        Qt.callLater(function() { tileList.centerOn(next) })
+    }
+
+    function changeCategory(delta) {
+        var count = cfg.categories.length
+        selectCategory((categoryIndex + delta + count) % count)
+    }
+
+    function activate(index) {
+        if (launcher.busy)
+            return
+        if (typeof index === "number")
+            setTileIndex(categoryIndex, index)
+        var items = currentItems
+        var idx = typeof index === "number" ? index : tileIndexFor(categoryIndex)
+        if (idx >= 0 && idx < items.length)
+            launcher.start(items[idx].id)
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#0b1324" }
+            GradientStop { position: 0.55; color: "#070b15" }
+            GradientStop { position: 1.0; color: "#04060b" }
+        }
+    }
+
+    SparkField {
+        anchors.fill: parent
+        s: root.s
+        running: root.animations
+        sparkCount: settings.fps === 30 ? 12 : 22
+    }
+
+    FocusScope {
+        id: keyLayer
+        anchors.fill: parent
+        focus: true
+
+        Keys.onLeftPressed: root.moveTile(-1)
+        Keys.onRightPressed: root.moveTile(1)
+        Keys.onUpPressed: root.changeCategory(-1)
+        Keys.onDownPressed: root.changeCategory(1)
+        Keys.onReturnPressed: root.activate()
+        Keys.onEnterPressed: root.activate()
+
+        Component.onCompleted: {
+            keyLayer.forceActiveFocus()
+            Qt.callLater(function() { tileList.centerOn(root.tileIndexFor(0)) })
+        }
+
+        Item {
+            id: header
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.topMargin: 30 * root.s
+            anchors.leftMargin: 56 * root.s
+            anchors.rightMargin: 56 * root.s
+            height: 86 * root.s
+
+            Text {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                text: "MEDIA HUB"
+                color: "#46536f"
+                font.pixelSize: 18 * root.s
+                font.letterSpacing: 4 * root.s
+            }
+
+            Row {
+                id: categoryBar
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 34 * root.s
+
+                Repeater {
+                    model: root.cfg.categories
+                    delegate: Item {
+                        height: 34 * root.s
+                        width: catText.implicitWidth
+
+                        Text {
+                            id: catText
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: parent.top
+                            text: modelData.title
+                            color: index === root.categoryIndex ? "#ffffff" : "#7c879c"
+                            font.pixelSize: 24 * root.s
+                            font.letterSpacing: 1 * root.s
+                            Behavior on color { ColorAnimation { duration: root.animMs } }
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: catText.implicitWidth
+                            height: Math.max(2, 3 * root.s)
+                            radius: height / 2
+                            color: root.accent
+                            opacity: index === root.categoryIndex ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: root.animMs } }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            anchors.margins: -8 * root.s
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.selectCategory(index)
+                        }
+                    }
+                }
+            }
+
+            Column {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 2 * root.s
+
+                Text {
+                    anchors.right: parent.right
+                    text: Qt.formatTime(root.now, "HH:mm")
+                    color: "#e9eefb"
+                    font.pixelSize: 38 * root.s
+                    font.weight: Font.Light
+                }
+
+                Text {
+                    anchors.right: parent.right
+                    text: root.now.toLocaleDateString(root.uiLocale, "dddd d MMMM")
+                    color: "#7c879c"
+                    font.pixelSize: 16 * root.s
+                }
+            }
+        }
+
+        Item {
+            id: content
+            anchors.top: header.bottom
+            anchors.bottom: footer.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+
+            Flickable {
+                id: tileList
+                anchors.centerIn: parent
+                width: parent.width
+                height: Math.min(430 * root.s, parent.height)
+                contentWidth: tilesRow.implicitWidth + 2 * sidePad
+                contentHeight: height
+                interactive: false
+                boundsBehavior: Flickable.StopAtBounds
+                clip: true
+
+                readonly property real tileWidth: 220 * root.s
+                readonly property real sidePad: tilesRow.implicitWidth <= width
+                    ? (width - tilesRow.implicitWidth) / 2
+                    : (width - tileWidth) / 2
+
+                Behavior on contentX {
+                    enabled: root.animations
+                    NumberAnimation { duration: root.animMs; easing.type: Easing.OutCubic }
+                }
+
+                function centerOn(index) {
+                    var tile = tilesRow.children[index]
+                    if (!tile)
+                        return
+                    var center = tilesRow.x + tile.x + tile.width / 2
+                    contentX = Math.max(0, Math.min(center - width / 2, contentWidth - width))
+                }
+
+                Row {
+                    id: tilesRow
+                    x: tileList.sidePad
+                    y: (tileList.height - height) / 2
+                    spacing: 24 * root.s
+
+                    Repeater {
+                        model: root.currentItems
+                        delegate: Tile {
+                            s: root.s
+                            accent: root.accent
+                            title: modelData.title
+                            subtitle: modelData.subtitle || ""
+                            iconSource: modelData.icon || ""
+                            focused: index === root.tileIndexFor(root.categoryIndex)
+                            animations: root.animations
+                            animMs: root.animMs
+                            onHovered: root.setTileIndex(root.categoryIndex, index)
+                            onActivated: root.activate(index)
+                        }
+                    }
+                }
+            }
+        }
+
+        Item {
+            id: footer
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottomMargin: 22 * root.s
+            height: 28 * root.s
+
+            Row {
+                anchors.centerIn: parent
+                spacing: 40 * root.s
+
+                Repeater {
+                    model: root.footerHints
+                    delegate: Text {
+                        text: modelData
+                        color: "#66718a"
+                        font.pixelSize: 16 * root.s
+                    }
+                }
+            }
+        }
+
+        Toast {
+            id: toast
+            s: root.s
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: footer.top
+            anchors.bottomMargin: 26 * root.s
+        }
+    }
+
+    Connections {
+        target: launcher
+        function onErrorOccurred(message) { toast.show(message) }
+    }
+
+    Connections {
+        target: gamepad
+        function onNavigate(direction) { root.moveTile(direction) }
+        function onCategoryStep(direction) { root.changeCategory(direction) }
+        function onSelectPressed() { root.activate() }
+    }
+
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: root.now = new Date()
+    }
+
+    Timer {
+        interval: screenshotDelay
+        running: screenshotPath !== ""
+        onTriggered: root.contentItem.grabToImage(function(result) {
+            if (result.saveToFile(screenshotPath))
+                console.log("media-hub: screenshot saved to " + screenshotPath)
+            else
+                console.error("media-hub: screenshot failed")
+            Qt.quit()
+        }, Qt.size(root.width, root.height))
+    }
+}

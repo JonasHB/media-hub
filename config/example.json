@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "settings": {
+    "fps": 60,
+    "animations": true,
+    "language": "sv",
+    "exit_combo": [
+      "left_shoulder",
+      "right_shoulder"
+    ]
+  },
+  "categories": [
+    {
+      "id": "streaming",
+      "title": "Streaming",
+      "items": [
+        {
+          "id": "youtube",
+          "title": "YouTube",
+          "icon": "icons/youtube.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.youtube.com/"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000
+          }
+        },
+        {
+          "id": "netflix",
+          "title": "Netflix",
+          "icon": "icons/netflix.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.netflix.com/browse"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000
+          }
+        },
+        {
+          "id": "disney-plus",
+          "title": "Disney+",
+          "icon": "icons/disney-plus.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.disneyplus.com/"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000
+          }
+        },
+        {
+          "id": "prime-video",
+          "title": "Prime Video",
+          "icon": "icons/prime-video.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.primevideo.com/"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000
+          }
+        },
+        {
+          "id": "svt-play",
+          "title": "SVT Play",
+          "icon": "icons/svt-play.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.svtplay.se/"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000
+          }
+        }
+      ],
+      "theme": "#4d9dff"
+    },
+    {
+      "id": "games",
+      "title": "Spel",
+      "items": [
+        {
+          "id": "steam-big-picture",
+          "title": "Steam",
+          "subtitle": "Big Picture",
+          "launch": {
+            "command": [
+              "steam",
+              "-bigpicture"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Steam",
+            "start_timeout_ms": 30000
+          }
+        }
+      ],
+      "theme": "#f2a54a"
+    }
+  ],
+  "emulators": [
+    {
+      "id": "snes9x",
+      "title": "Super Nintendo",
+      "category": "games",
+      "rom_dirs": [
+        "/home/user/snes"
+      ],
+      "extensions": [
+        ".sfc",
+        ".smc"
+      ],
+      "command": [
+        "flatpak",
+        "run",
+        "--filesystem=/home/user/snes",
+        "com.snes9x.Snes9x",
+        "{rom}"
+      ],
+      "handover": {
+        "type": "window",
+        "window_class": "snes9x-gtk Snes9x-gtk",
+        "profile": "snes9x",
+        "start_timeout_ms": 15000,
+        "close_strategy": "graceful",
+        "fullscreen": true
+      }
+    }
+  ]
+}

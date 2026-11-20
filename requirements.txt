@@ -1,0 +1,7 @@
+PySide6-Essentials>=6.6
+pysdl2>=0.9.17
+pysdl2-dll>=2.28
+python-xlib>=0.33
+
+# development
+pytest>=8
