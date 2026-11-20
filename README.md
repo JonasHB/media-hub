@@ -246,6 +246,10 @@ launchern med samma menyval markerat.
 - Fel i konfigurationen: programmet skriver alla fel med sökväg och avslutar.
 - Handover fastnar: kontrollera `window_class` med `xprop WM_CLASS`, öka
   `start_timeout_ms` och läs `handover:`-raderna i loggen.
+- Långsam start: launchern visar "Startar …" direkt och loggar
+  `window ... active after N ms` när fönstret hittas. Är N litet ligger tiden i
+  programmets egen uppstart (t.ex. Firefox kallstart med tillägg), inte i
+  handovern.
 - Ingen gamepad: `ls /dev/input/js*`, testa `SDL_VIDEODRIVER=dummy` vid behov;
   SDL2 hotpluggar automatiskt.
 - Återställ allt: `./uninstall.sh` tar bort programmet men behåller

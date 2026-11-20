@@ -12,7 +12,7 @@ from .config import find_item
 
 log = logging.getLogger(__name__)
 
-POLL_INTERVAL_MS = 200
+POLL_INTERVAL_MS = 75
 PROCESS_EXIT_GRACE = 3.0
 CLOSE_TIMEOUT = 8.0
 KILL_GRACE = 3.0
@@ -55,6 +55,7 @@ class Handover(QObject):
         self._kill_deadline: float | None = None
         self._launcher_window = None
         self._display = None
+        self._started_at = 0.0
 
         self._timer = QTimer(self)
         self._timer.setInterval(POLL_INTERVAL_MS)
@@ -115,6 +116,7 @@ class Handover(QObject):
         self._deadline = time.monotonic() + timeout_ms / 1000
         self._grace_deadline = None
         self._window_id = None
+        self._started_at = time.monotonic()
         log.info("started %s (%s)", item["id"], " ".join(command))
         self.busyChanged.emit()
         self.started.emit(item_id)
@@ -200,7 +202,11 @@ class Handover(QObject):
             found = self._find_new_window(window_class)
             if found is not None:
                 self._window_id = found
-                log.info("handover: window %#x is active", found)
+                log.info(
+                    "handover: window %#x is active after %d ms",
+                    found,
+                    int((now - self._started_at) * 1000),
+                )
                 if handover.get("fullscreen"):
                     self._request_fullscreen(found)
                 self._hide_launcher()

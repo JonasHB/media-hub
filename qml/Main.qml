@@ -14,6 +14,7 @@ Window {
     property var cfg: JSON.parse(configJson)
     property var settings: cfg.settings || ({})
     property bool animations: settings.animations !== false
+    property string startingTitle: ""
     readonly property bool showPointer: startWindowed
     property int animMs: animations ? 240 : 0
     property int categoryIndex: 0
@@ -129,8 +130,10 @@ Window {
             setTileIndex(categoryIndex, index)
         var items = currentItems
         var idx = typeof index === "number" ? index : tileIndexFor(categoryIndex)
-        if (idx >= 0 && idx < items.length)
+        if (idx >= 0 && idx < items.length) {
+            startingTitle = items[idx].title
             launcher.start(items[idx].id)
+        }
     }
 
     Rectangle {
@@ -367,7 +370,12 @@ Window {
 
     Connections {
         target: launcher
-        function onErrorOccurred(message) { toast.show(message) }
+        function onErrorOccurred(message) {
+            root.startingTitle = ""
+            toast.show(message)
+        }
+        function onExternalActive(itemId) { root.startingTitle = "" }
+        function onExternalClosed(itemId) { root.startingTitle = "" }
     }
 
     Connections {
@@ -422,6 +430,15 @@ Window {
             root.noteActivity()
             keyLayer.forceActiveFocus()
         }
+    }
+
+    LaunchOverlay {
+        id: launchOverlay
+        anchors.fill: parent
+        s: root.s
+        accent: root.accent
+        title: root.startingTitle
+        active: root.startingTitle.length > 0 && launcher.busy
     }
 
     SystemMenu {
