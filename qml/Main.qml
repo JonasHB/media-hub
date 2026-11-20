@@ -148,7 +148,7 @@ Window {
     SparkField {
         anchors.fill: parent
         s: root.s
-        running: root.animations && !slideshow.active
+        running: root.animations && !slideshow.active && !launcher.busy
         sparkCount: settings.fps === 30 ? 12 : 22
     }
 

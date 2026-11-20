@@ -209,7 +209,7 @@ class Handover(QObject):
                 )
                 if handover.get("fullscreen"):
                     self._request_fullscreen(found)
-                self._hide_launcher()
+                self._park_launcher()
                 self.externalActive.emit(self._item["id"])
                 return
 
@@ -232,7 +232,7 @@ class Handover(QObject):
             log.info("handover: window %#x closed", self._window_id)
             item_id = self._item["id"]
             self._reset()
-            self._show_launcher()
+            self._restore_launcher()
             self.externalClosed.emit(item_id)
             return
 
@@ -317,7 +317,7 @@ class Handover(QObject):
             self._process.terminate()
         log.warning("handover failed for %s: %s", title, reason)
         self._reset()
-        self._show_launcher()
+        self._restore_launcher()
         self.errorOccurred.emit(f"Kunde inte starta {title}: {reason}")
 
     def _reset(self) -> None:
@@ -332,12 +332,17 @@ class Handover(QObject):
         if was_busy:
             self.busyChanged.emit()
 
-    def _hide_launcher(self) -> None:
+    def _park_launcher(self) -> None:
         if self._launcher_window is not None:
-            self._launcher_window.hide()
+            self._launcher_window.lower()
 
-    def _show_launcher(self) -> None:
+    def _restore_launcher(self) -> None:
         if self._launcher_window is None:
             return
         self._launcher_window.showFullScreen()
+        raise_ = getattr(self._launcher_window, "raise_", None)
+        if raise_ is None:
+            raise_ = getattr(self._launcher_window, "raise", None)
+        if raise_ is not None:
+            raise_()
         self._launcher_window.requestActivate()

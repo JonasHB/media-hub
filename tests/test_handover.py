@@ -28,9 +28,17 @@ class FakeLauncherWindow:
     def __init__(self):
         self.visible = True
         self.activations = 0
+        self.raised = 0
+        self.lowered = 0
 
     def hide(self):
         self.visible = False
+
+    def lower(self):
+        self.lowered += 1
+
+    def raise_(self):
+        self.raised += 1
 
     def showFullScreen(self):
         self.visible = True
@@ -111,11 +119,12 @@ def test_handover_hides_and_restores_launcher(qt_app, tmp_path):
     try:
         handover.start("target")
         assert pump(handover, 10, lambda: ("active", "target") in events)
-        assert launcher.visible is False
+        assert launcher.lowered == 1
+        assert launcher.visible is True
 
         handover._process.terminate()
         assert pump(handover, 10, lambda: ("closed", "target") in events)
-        assert launcher.visible is True
+        assert launcher.raised == 1
         assert launcher.activations == 1
         assert not [event for event in events if event[0] == "error"]
     finally:

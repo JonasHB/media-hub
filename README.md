@@ -140,7 +140,9 @@ samtidigt. Relativa sökvägar tolkas relativt konfigurationsfilen, `~` expander
 
 - `command` är en array: program och varje argument som egna värden.
 - `handover.type: "window"` kräver `window_class` (WM_CLASS, skiftlägesokänsligt).
-  Fönstret övervakas; launchern göms och återställs när fönstret stängs.
+  Fönstret övervakas; launchern läggs under det externa fönstret (inget skrivbord
+  blinkar fram) och lyfts tillbaka när fönstret stängs. Animationerna pausas
+  medan det externa fönstret är aktivt.
 - `fullscreen: true` skickar en EWMH-begäran om helskärm när fönstret dyker upp
   (används för Snes9x).
 - `close_strategy`: `graceful` skickar WM_DELETE_WINDOW och väntar, därefter
