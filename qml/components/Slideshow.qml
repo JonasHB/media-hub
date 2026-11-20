@@ -8,6 +8,7 @@ FocusScope {
     property bool kenBurns: true
     property string order: "random"
     property bool showFilename: false
+    property bool showPointer: true
     property var dateLocale
     property real s: 1
     property bool active: false
@@ -218,6 +219,7 @@ FocusScope {
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.AllButtons
+        cursorShape: view.showPointer ? Qt.ArrowCursor : Qt.BlankCursor
         onPositionChanged: if (view.armed) view.wake()
         onClicked: if (view.armed) view.wake()
         onWheel: if (view.armed) view.wake()

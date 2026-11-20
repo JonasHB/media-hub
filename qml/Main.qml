@@ -14,6 +14,7 @@ Window {
     property var cfg: JSON.parse(configJson)
     property var settings: cfg.settings || ({})
     property bool animations: settings.animations !== false
+    readonly property bool showPointer: startWindowed
     property int animMs: animations ? 240 : 0
     property int categoryIndex: 0
     property var tileIndexes: []
@@ -147,6 +148,7 @@ Window {
             anchors.fill: parent
             hoverEnabled: true
             acceptedButtons: Qt.NoButton
+            cursorShape: root.showPointer ? Qt.ArrowCursor : Qt.BlankCursor
             onPositionChanged: root.noteActivity()
         }
 
@@ -212,7 +214,7 @@ Window {
                             anchors.fill: parent
                             anchors.margins: -8 * root.s
                             hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
+                            cursorShape: root.showPointer ? Qt.PointingHandCursor : Qt.BlankCursor
                             onClicked: root.selectCategory(index)
                         }
                     }
@@ -292,6 +294,7 @@ Window {
                             subtitle: modelData.subtitle || ""
                             iconSource: modelData.icon || ""
                             focused: index === root.tileIndexFor(root.categoryIndex)
+                            showPointer: root.showPointer
                             animations: root.animations
                             animMs: root.animMs
                             onHovered: {
@@ -378,6 +381,7 @@ Window {
         kenBurns: root.ssCfg.ken_burns !== false
         order: root.ssCfg.order || "random"
         showFilename: root.ssCfg.show_filename === true
+        showPointer: root.showPointer
         dateLocale: root.uiLocale
         onClosed: {
             root.noteActivity()

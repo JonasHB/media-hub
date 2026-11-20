@@ -7,6 +7,7 @@ Item {
     property string iconSource: ""
     property bool focused: false
     property bool animations: true
+    property bool showPointer: true
     property int animMs: 240
     property real s: 1
     property color accent: "#4d9dff"
@@ -124,7 +125,7 @@ Item {
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: tile.showPointer ? Qt.PointingHandCursor : Qt.BlankCursor
         onEntered: tile.hovered()
         onClicked: tile.activated()
     }

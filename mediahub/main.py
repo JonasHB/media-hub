@@ -162,8 +162,16 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     window = engine.rootObjects()[0]
-    if not args.windowed:
-        window.setCursor(QCursor(Qt.CursorShape.BlankCursor))
+
+    def apply_cursor() -> None:
+        if args.windowed:
+            window.unsetCursor()
+        else:
+            window.setCursor(QCursor(Qt.CursorShape.BlankCursor))
+
+    apply_cursor()
+    window.activeChanged.connect(lambda: apply_cursor())
+    window.visibleChanged.connect(lambda: apply_cursor())
     handover.set_launcher_window(window)
     handover.externalActive.connect(lambda _item_id: gamepad.setActive(False))
     handover.externalClosed.connect(lambda _item_id: gamepad.setActive(True))
