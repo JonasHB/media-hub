@@ -15,6 +15,7 @@ from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QImage
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtQuick import QQuickWindow
 from PySide6.QtTest import QTest
 from mediahub.config import load_config
 from mediahub.gamepad import Gamepad
@@ -37,6 +38,20 @@ for key, value in values.items():
 engine.load(QUrl.fromLocalFile('qml/Main.qml'))
 window = engine.rootObjects()[0]
 QTest.qWait(50)
+def image_for(parent, name):
+    for child in parent.childItems():
+        source = child.property('source')
+        if isinstance(source, QUrl) and source.fileName() == name:
+            return child
+        found = image_for(child, name)
+        if found is not None:
+            return found
+
+for name in ('prime-video.svg', 'svt-play.svg'):
+    image = image_for(window.contentItem(), name)
+    assert image is not None
+    assert image.property('sourceSize').width() >= image.width() * 2
+
 QTest.keyClick(window, Qt.Key_PageDown)
 items = window.property('currentItems').toVariant()
 for item, logo in zip(items[1:], ['snes.svg', 'nes.svg', 'folder.svg'], strict=True):
