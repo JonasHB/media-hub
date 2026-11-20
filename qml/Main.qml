@@ -442,17 +442,17 @@ Window {
         target: gamepad
         function onNavigate(direction) {
             if (systemMenu.visible) { systemMenu.move(direction); return }
-            if (slideshow.active) { slideshow.wake(); return }
+            if (slideshow.active) { slideshow.step(direction, false); return }
             root.moveTile(direction)
         }
         function onCategoryStep(direction) {
             if (systemMenu.visible) { systemMenu.move(direction); return }
-            if (slideshow.active) { slideshow.wake(); return }
+            if (slideshow.active) { slideshow.step(direction, false); return }
             root.changeCategory(direction)
         }
         function onVerticalStep(direction) {
             if (systemMenu.visible) { systemMenu.move(direction); return }
-            if (slideshow.active) { slideshow.wake(); return }
+            if (slideshow.active) slideshow.adjustDuration(-direction)
         }
         function onSelectPressed() {
             if (systemMenu.visible) { systemMenu.activate(); return }
@@ -481,6 +481,7 @@ Window {
 
     Slideshow {
         id: slideshow
+        onActiveChanged: gamepad.setRightStickNavigation(active)
         anchors.fill: parent
         s: root.s
         photos: root.photoList

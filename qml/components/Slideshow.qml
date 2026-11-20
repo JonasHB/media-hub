@@ -4,6 +4,8 @@ FocusScope {
     id: view
     property var photos: []
     property int photoSeconds: 10
+    property int durationAdjustment: 0
+    readonly property int displaySeconds: photoSeconds + durationAdjustment
     property int transitionMs: 1200
     property bool kenBurns: true
     property string order: "random"
@@ -54,7 +56,7 @@ FocusScope {
         kbAnimation.target = layer
         kbAnimation.from = 1.0
         kbAnimation.to = kenBurns ? 1.07 : 1.0
-        kbAnimation.duration = photoSeconds * 1000 + transitionMs
+        kbAnimation.duration = displaySeconds * 1000 + transitionMs
         kbAnimation.restart()
     }
 
@@ -86,11 +88,16 @@ FocusScope {
         closed()
     }
 
-    function advance() {
+    function adjustDuration(delta) {
+        durationAdjustment = Math.max(3, Math.min(600, displaySeconds + delta)) - photoSeconds
+        advanceTimer.restart()
+    }
+
+    function step(direction, reshuffle) {
         if (deck.length === 0)
             return
-        deckIndex = (deckIndex + 1) % deck.length
-        if (deckIndex === 0 && order === "random" && deck.length > 1)
+        deckIndex = (deckIndex + direction + deck.length) % deck.length
+        if (reshuffle && deckIndex === 0 && order === "random" && deck.length > 1)
             deck = shuffled(deck)
 
         var path = deck[deckIndex]
@@ -105,6 +112,10 @@ FocusScope {
             restartKenBurns(layerA)
         }
         advanceTimer.restart()
+    }
+
+    function advance() {
+        step(1, true)
     }
 
     function skipBroken() {
@@ -234,7 +245,7 @@ FocusScope {
 
     Timer {
         id: advanceTimer
-        interval: Math.max(1000, view.photoSeconds * 1000)
+        interval: view.displaySeconds * 1000
         repeat: true
         running: view.active
         onTriggered: view.advance()

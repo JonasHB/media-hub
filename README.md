@@ -225,9 +225,12 @@ Så räcker det att lägga `Super Mario All-Stars.png` i
   Videofiler och dolda filer ignoreras. Saknade mappar loggas.
 - `show_filename: true` visar även fotots filnamn (utan ändelse) diskret under
   datumet. Av som standard.
-- Datum och tid visas diskret nere till höger. Första knapptryck, musklick
-  eller knapp på handkontrollen väcker launchern **utan** att aktivera något
-  menyval. Skärmsläckaren startar aldrig ovanpå en extern applikation.
+- Styrkorset och båda spakarna bläddrar åt vänster/höger; LB/RB visar
+  föregående/nästa foto. Upp/ned ökar/minskar visningstiden med en sekund
+  (3–600 sekunder) fram till nästa omstart av Media Hub.
+- Datum och tid visas diskret nere till höger. Andra knappar som A, B och Y,
+  samt tangentbord och mus, väcker launchern utan att aktivera ett menyval.
+  Skärmsläckaren startar aldrig ovanpå en extern applikation.
 - Hittas inga foton visas en notis med hänvisning till `screensaver.folders`.
 
 ## Styrning

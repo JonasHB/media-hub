@@ -11,6 +11,8 @@ def test_console_navigation(tmp_path):
         [sys.executable, "-c", """
 import json
 import sys
+from pathlib import Path
+import sdl2
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QImage
 from PySide6.QtGui import QGuiApplication
@@ -33,8 +35,21 @@ assert apply_library(config) == []
 app = QGuiApplication([])
 engine = QQmlApplicationEngine()
 gamepad = Gamepad(engine, config['settings']['exit_combo'])
+joystick_index = sdl2.SDL_JoystickAttachVirtual(sdl2.SDL_JOYSTICK_TYPE_GAMECONTROLLER, 6, 16, 0)
+assert joystick_index >= 0
+joystick = sdl2.SDL_JoystickOpen(joystick_index)
+gamepad._poll()
+assert gamepad.connected
+photos = []
+for name in ('first', 'second', 'third'):
+    path = Path(sys.argv[1]) / (name + '.png')
+    image = QImage(16, 16, QImage.Format_RGB32)
+    image.fill(0)
+    assert image.save(str(path))
+    photos.append(path.as_uri())
+config['settings']['screensaver'].update(enabled=True, order='sequential', photo_seconds=10)
 values = dict(configJson=json.dumps(config), startWindowed=True, windowWidth=800,
-              windowHeight=450, slideshowPhotos='[]', screenshotPath='', screenshotDelay=0,
+              windowHeight=450, slideshowPhotos=json.dumps(photos), screenshotPath='', screenshotDelay=0,
               launcher=Handover(config, engine), systemActions=SystemActions(app), gamepad=gamepad)
 for key, value in values.items():
     engine.rootContext().setContextProperty(key, value)
@@ -81,6 +96,43 @@ QTest.keyClick(window, Qt.Key_Return)
 assert window.property('sectionTitle') == 'Nintendo 8-bit'
 QTest.keyClick(window, Qt.Key_Escape)
 assert window.property('sectionTitle') == ''
+slideshow = next(child for child in window.contentItem().childItems()
+                 if child.metaObject().indexOfProperty('currentName') >= 0)
+
+def press(button):
+    assert sdl2.SDL_JoystickSetVirtualButton(joystick, button, 1) == 0
+    gamepad._poll()
+    assert sdl2.SDL_JoystickSetVirtualButton(joystick, button, 0) == 0
+    gamepad._poll()
+
+def tilt(axis, direction):
+    assert sdl2.SDL_JoystickSetVirtualAxis(joystick, axis, direction * 30000) == 0
+    gamepad._poll()
+    assert sdl2.SDL_JoystickSetVirtualAxis(joystick, axis, 0) == 0
+    gamepad._poll()
+
+press(sdl2.SDL_CONTROLLER_BUTTON_Y)
+assert slideshow.property('currentName') == 'first'
+for control, expected in (
+    (lambda: press(sdl2.SDL_CONTROLLER_BUTTON_DPAD_LEFT), 'third'),
+    (lambda: press(sdl2.SDL_CONTROLLER_BUTTON_DPAD_RIGHT), 'first'),
+    (lambda: press(sdl2.SDL_CONTROLLER_BUTTON_RIGHTSHOULDER), 'second'),
+    (lambda: press(sdl2.SDL_CONTROLLER_BUTTON_LEFTSHOULDER), 'first'),
+    (lambda: tilt(sdl2.SDL_CONTROLLER_AXIS_LEFTX, 1), 'second'),
+    (lambda: tilt(sdl2.SDL_CONTROLLER_AXIS_RIGHTX, -1), 'first'),
+):
+    control()
+    assert slideshow.property('active')
+    assert slideshow.property('currentName') == expected
+press(sdl2.SDL_CONTROLLER_BUTTON_DPAD_UP)
+assert slideshow.property('displaySeconds') == 11
+tilt(sdl2.SDL_CONTROLLER_AXIS_RIGHTY, 1)
+assert slideshow.property('displaySeconds') == 10
+assert slideshow.property('currentName') == 'first'
+press(sdl2.SDL_CONTROLLER_BUTTON_B)
+assert not slideshow.property('active')
+sdl2.SDL_JoystickClose(joystick)
+sdl2.SDL_JoystickDetachVirtual(joystick_index)
 gamepad.shutdown()
 """, str(tmp_path)], cwd=root, env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
         capture_output=True, text=True, timeout=15,

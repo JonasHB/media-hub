@@ -80,6 +80,7 @@ class Gamepad(QObject):
         self._axis_y = RepeatAxis()
         self._next_scan = 0.0
         self._active = True
+        self._right_stick_navigation = False
 
         if sdl2.SDL_InitSubSystem(sdl2.SDL_INIT_GAMECONTROLLER) != 0:
             log.error("SDL game controller init failed: %s", sdl2.SDL_GetError().decode())
@@ -158,7 +159,7 @@ class Gamepad(QObject):
         self._poll_buttons()
 
     def _stick(self, axis_name: str, raw: int) -> int:
-        current = self._stick_direction[axis_name]
+        current = self._stick_direction.get(axis_name, 0)
         threshold = DEADZONE_EXIT if current != 0 else DEADZONE_ENTER
         if abs(raw) < threshold:
             direction = 0
@@ -173,14 +174,24 @@ class Gamepad(QObject):
     def _button_pressed(self, button: int) -> bool:
         return sdl2.SDL_GameControllerGetButton(self._controller, button) == 1
 
+    @Slot(bool)
+    def setRightStickNavigation(self, enabled: bool) -> None:
+        self._right_stick_navigation = enabled
+        self._stick_direction.pop("rx", None)
+        self._stick_direction.pop("ry", None)
+
     def _poll_axes(self, now: float) -> None:
         x = self._dpad_axis(sdl2.SDL_CONTROLLER_BUTTON_DPAD_LEFT, sdl2.SDL_CONTROLLER_BUTTON_DPAD_RIGHT)
         if x == 0:
             x = self._stick("x", sdl2.SDL_GameControllerGetAxis(self._controller, sdl2.SDL_CONTROLLER_AXIS_LEFTX))
+        if x == 0 and self._right_stick_navigation:
+            x = self._stick("rx", sdl2.SDL_GameControllerGetAxis(self._controller, sdl2.SDL_CONTROLLER_AXIS_RIGHTX))
 
         y = self._dpad_axis(sdl2.SDL_CONTROLLER_BUTTON_DPAD_UP, sdl2.SDL_CONTROLLER_BUTTON_DPAD_DOWN)
         if y == 0:
             y = self._stick("y", sdl2.SDL_GameControllerGetAxis(self._controller, sdl2.SDL_CONTROLLER_AXIS_LEFTY))
+        if y == 0 and self._right_stick_navigation:
+            y = self._stick("ry", sdl2.SDL_GameControllerGetAxis(self._controller, sdl2.SDL_CONTROLLER_AXIS_RIGHTY))
 
         step = self._axis_x.update(x, now)
         if step is not None:
