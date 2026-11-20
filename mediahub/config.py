@@ -30,6 +30,8 @@ GAMEPAD_BUTTONS = {
 }
 DEFAULT_EXIT_COMBO = ["left_shoulder", "right_shoulder"]
 ICON_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp", ".svg")
+STREAMING_ICONS = {"youtube", "netflix", "disney-plus", "prime-video", "svt-play"}
+BUNDLED_ICON_DIR = Path(__file__).resolve().parents[1] / "config" / "icons"
 COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 
 
@@ -494,6 +496,9 @@ def _validate_items(
                 icon = _resolve(base_dir, icon_value)
         elif item_id is not None:
             icon = _find_auto_icon(base_dir, item_id)
+        if item_id in STREAMING_ICONS and (icon is None or not Path(icon).is_file()):
+            bundled = BUNDLED_ICON_DIR / f"{item_id}.svg"
+            icon = _find_auto_icon(base_dir, item_id) or (str(bundled) if bundled.is_file() else icon)
 
         launch = _validate_launch(v, item.get("launch"), f"{item_path}.launch", base_dir)
         handover = _validate_handover(v, item.get("handover"), f"{item_path}.handover")

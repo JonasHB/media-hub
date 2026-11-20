@@ -29,7 +29,6 @@
         {
           "id": "youtube",
           "title": "YouTube",
-          "icon": "icons/youtube.png",
           "launch": {
             "command": [
               "firefox",
@@ -47,7 +46,6 @@
         {
           "id": "netflix",
           "title": "Netflix",
-          "icon": "icons/netflix.png",
           "launch": {
             "command": [
               "firefox",
@@ -65,7 +63,6 @@
         {
           "id": "disney-plus",
           "title": "Disney+",
-          "icon": "icons/disney-plus.png",
           "launch": {
             "command": [
               "firefox",
@@ -83,7 +80,6 @@
         {
           "id": "prime-video",
           "title": "Prime Video",
-          "icon": "icons/prime-video.png",
           "launch": {
             "command": [
               "firefox",
@@ -101,7 +97,6 @@
         {
           "id": "svt-play",
           "title": "SVT Play",
-          "icon": "icons/svt-play.png",
           "launch": {
             "command": [
               "firefox",

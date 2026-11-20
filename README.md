@@ -185,6 +185,8 @@ t.ex. `youtube.png`, `netflix.svg` eller `steam-big-picture.webp`. Inget behöve
 loggen tipsar om exakt filnamn som saknas. Format: png, jpg, jpeg, webp, svg.
 
 Egen `icon`-nyckel fungerar fortfarande för att peka på valfri sökväg.
+YouTube, Netflix, Disney+, Prime Video och SVT Play har medföljande
+logotyper. En befintlig egen ikon har företräde.
 
 Spelomslag hittas automatiskt, i den här ordningen:
 

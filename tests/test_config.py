@@ -55,7 +55,7 @@ def test_example_config_is_valid():
     youtube = find_item(config, "youtube")
     assert youtube["handover"]["type"] == "window"
     assert youtube["handover"]["window_class"] == "Navigator firefox_firefox"
-    assert youtube["icon"].endswith("/config/icons/youtube.png")
+    assert youtube["icon"].endswith("/config/icons/youtube.svg")
     assert Path(youtube["icon"]).is_absolute()
 
 
@@ -107,6 +107,8 @@ def test_relative_paths_are_resolved(tmp_path):
     data = minimal_config()
     item = data["categories"][0]["items"][0]
     item["icon"] = "icons/youtube.png"
+    (tmp_path / "icons").mkdir()
+    (tmp_path / "icons/youtube.png").touch()
     item["launch"]["cwd"] = "run"
     config = load_config(write_config(tmp_path, data))
     resolved_item = config["categories"][0]["items"][0]
@@ -246,3 +248,15 @@ def test_subcategory_id_cannot_duplicate_top_level_id(tmp_path):
     raw["categories"][0]["subcategories"] = [{"id": "streaming", "title": "Duplicate"}]
     with pytest.raises(ConfigError, match=r"categories\[0\]\.subcategories\[0\]\.id: duplicate"):
         validate(raw, tmp_path)
+
+
+def test_streaming_logos_fall_back_when_local_icon_is_missing(tmp_path):
+    raw = minimal_config()
+    item = raw["categories"][0]["items"][0]
+    item["icon"] = "icons/youtube.png"
+    config = validate(raw, tmp_path)
+    assert Path(find_item(config, "youtube")["icon"]).is_file()
+    custom = tmp_path / "icons/youtube.png"
+    custom.parent.mkdir()
+    custom.touch()
+    assert find_item(validate(raw, tmp_path), "youtube")["icon"] == str(custom)
