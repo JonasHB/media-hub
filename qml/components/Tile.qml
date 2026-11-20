@@ -64,6 +64,7 @@ Item {
                 id: icon
                 anchors.fill: parent
                 source: tile.iconSource
+                sourceSize.width: tile.folder ? Math.ceil(width * 2) : 0
                 asynchronous: true
                 fillMode: Image.PreserveAspectFit
                 smooth: true
