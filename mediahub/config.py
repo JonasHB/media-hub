@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .library import ROM_PLACEHOLDER
+from .library import ROM_PLACEHOLDER, iter_categories
 
 CONFIG_VERSION = 1
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
@@ -151,7 +151,7 @@ def validate(raw: Any, base_dir: Path) -> dict:
 
     settings = _validate_settings(v, cfg.get("settings", {}), "settings", base_dir)
     categories = _validate_categories(v, cfg.get("categories"), base_dir)
-    category_ids = {category["id"] for category in categories}
+    category_ids = {category["id"] for category in iter_categories(categories)}
     emulators = _validate_emulators(v, cfg.get("emulators"), base_dir, category_ids)
 
     if v.errors:
@@ -393,48 +393,65 @@ def _validate_rom_command(v: _Validator, value: Any, path: str) -> list[str]:
     return command
 
 
-def _validate_categories(v: _Validator, value: Any, base_dir: Path) -> list[dict]:
+def _validate_categories(
+    v: _Validator, value: Any, base_dir: Path, path: str = "categories",
+    seen_categories: set[str] | None = None, seen_items: set[str] | None = None,
+) -> list[dict]:
+    top_level = seen_categories is None
     if not isinstance(value, list):
-        v.err("categories", f"must be an array, got {_kind(value)}")
+        v.err(path, f"must be an array, got {_kind(value)}")
         return []
-    if not value:
-        v.err("categories", "must contain at least one category")
+    if not value and top_level:
+        v.err(path, "must contain at least one category")
         return []
 
-    seen_categories: set[str] = set()
-    seen_items: set[str] = set()
+    if seen_categories is None:
+        seen_categories = set()
+    if seen_items is None:
+        seen_items = set()
     categories: list[dict] = []
 
     for index, raw_category in enumerate(value):
-        path = f"categories[{index}]"
-        category = v.object(raw_category, path)
+        category_path = f"{path}[{index}]"
+        category = v.object(raw_category, category_path)
         if category is None:
             continue
 
-        v.unknown_keys(category, {"id", "title", "theme", "items"}, path)
+        allowed = {"id", "title", "theme", "items"}
+        if top_level:
+            allowed.add("subcategories")
+        v.unknown_keys(category, allowed, category_path)
 
         category_id = v.slug(
-            category.get("id", f"category-{index}"), _join(path, "id"), seen_categories, "category id"
+            category.get("id", f"category-{index}"), _join(category_path, "id"), seen_categories, "category id"
         )
         if "id" not in category:
-            v.err(_join(path, "id"), "missing required key")
-        title = v.string(category.get("title"), _join(path, "title"))
+            v.err(_join(category_path, "id"), "missing required key")
+        title = v.string(category.get("title"), _join(category_path, "title"))
         theme = None
         if "theme" in category:
-            theme_value = v.string(category["theme"], _join(path, "theme"))
+            theme_value = v.string(category["theme"], _join(category_path, "theme"))
             if theme_value is not None:
                 if COLOR_RE.match(theme_value):
                     theme = theme_value
                 else:
-                    v.err(_join(path, "theme"), f"must be a colour like '#4d9dff', got {theme_value!r}")
+                    v.err(_join(category_path, "theme"), f"must be a colour like '#4d9dff', got {theme_value!r}")
 
-        items = _validate_items(v, category.get("items"), f"{path}.items", base_dir, seen_items)
+        children = (
+            _validate_categories(v, category["subcategories"], base_dir,
+                                 f"{category_path}.subcategories", seen_categories, seen_items)
+            if top_level and "subcategories" in category else []
+        )
+        raw_items = category.get("items", [] if children or not top_level else None)
+        items = _validate_items(v, raw_items, f"{category_path}.items", base_dir,
+                                seen_items, allow_empty=bool(children) or not top_level)
         categories.append(
             {
                 "id": category_id or f"category-{index}",
                 "title": title or f"Category {index + 1}",
                 "theme": theme,
                 "items": items,
+                "subcategories": children,
             }
         )
 
@@ -442,12 +459,13 @@ def _validate_categories(v: _Validator, value: Any, base_dir: Path) -> list[dict
 
 
 def _validate_items(
-    v: _Validator, value: Any, path: str, base_dir: Path, seen_items: set[str]
+    v: _Validator, value: Any, path: str, base_dir: Path, seen_items: set[str],
+    *, allow_empty: bool = False,
 ) -> list[dict]:
     if not isinstance(value, list):
         v.err(path, f"must be an array, got {_kind(value)}")
         return []
-    if not value:
+    if not value and not allow_empty:
         v.err(path, "must contain at least one item")
         return []
 
@@ -616,7 +634,7 @@ def load_config(path: str | Path) -> dict:
 
 
 def find_item(config: dict, item_id: str) -> dict | None:
-    for category in config["categories"]:
+    for category in iter_categories(config["categories"]):
         for item in category["items"]:
             if item["id"] == item_id:
                 return item

@@ -70,9 +70,15 @@ def scan_roms(rom_dirs: list[str], extensions: list[str]) -> list[Path]:
     return found
 
 
+def iter_categories(categories):
+    for category in categories:
+        yield category
+        yield from category.get("subcategories", [])
+
+
 def report_missing_icons(config: dict) -> list[tuple[str, str, str]]:
     missing = []
-    for category in config["categories"]:
+    for category in iter_categories(config["categories"]):
         for item in category["items"]:
             icon = item["icon"]
             if icon is None or not Path(icon).is_file():
@@ -82,9 +88,9 @@ def report_missing_icons(config: dict) -> list[tuple[str, str, str]]:
 
 def apply_library(config: dict) -> list[str]:
     warnings: list[str] = []
-    categories = {category["id"]: category for category in config["categories"]}
+    categories = {category["id"]: category for category in iter_categories(config["categories"])}
     used_ids = {
-        item["id"] for category in config["categories"] for item in category["items"]
+        item["id"] for category in categories.values() for item in category["items"]
     }
 
     for emulator in config.get("emulators", []):

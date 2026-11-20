@@ -140,6 +140,10 @@
           }
         }
       ],
+      "subcategories": [
+        {"id": "snes", "title": "Super Nintendo"},
+        {"id": "nes", "title": "Nintendo 8-bit"}
+      ],
       "theme": "#f2a54a"
     }
   ],
@@ -147,7 +151,7 @@
     {
       "id": "snes9x",
       "title": "Super Nintendo",
-      "category": "games",
+      "category": "snes",
       "rom_dirs": [
         "/home/user/snes"
       ],

@@ -1,0 +1,54 @@
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+def test_console_navigation(tmp_path):
+    (tmp_path / "Harvest Moon.sfc").touch()
+    root = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [sys.executable, "-c", """
+import json
+import sys
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtTest import QTest
+from mediahub.config import load_config
+from mediahub.gamepad import Gamepad
+from mediahub.handover import Handover
+from mediahub.library import apply_library
+from mediahub.system import SystemActions
+
+config = load_config('config/example.json')
+config['emulators'][0]['rom_dirs'] = [sys.argv[1]]
+assert apply_library(config) == []
+app = QGuiApplication([])
+engine = QQmlApplicationEngine()
+gamepad = Gamepad(engine, config['settings']['exit_combo'])
+values = dict(configJson=json.dumps(config), startWindowed=True, windowWidth=800,
+              windowHeight=450, slideshowPhotos='[]', screenshotPath='', screenshotDelay=0,
+              launcher=Handover(config, engine), systemActions=SystemActions(app), gamepad=gamepad)
+for key, value in values.items():
+    engine.rootContext().setContextProperty(key, value)
+engine.load(QUrl.fromLocalFile('qml/Main.qml'))
+window = engine.rootObjects()[0]
+QTest.qWait(50)
+QTest.keyClick(window, Qt.Key_PageDown)
+QTest.keyClick(window, Qt.Key_Right)
+QTest.keyClick(window, Qt.Key_Return)
+assert window.property('sectionTitle') == 'Super Nintendo'
+assert [item['title'] for item in window.property('currentItems').toVariant()] == ['Harvest Moon', 'Tillbaka']
+gamepad.backPressed.emit()
+assert window.property('sectionTitle') == ''
+QTest.keyClick(window, Qt.Key_Right)
+QTest.keyClick(window, Qt.Key_Return)
+assert window.property('sectionTitle') == 'Nintendo 8-bit'
+QTest.keyClick(window, Qt.Key_Escape)
+assert window.property('sectionTitle') == ''
+gamepad.shutdown()
+""", str(tmp_path)], cwd=root, env={**os.environ, "QT_QPA_PLATFORM": "offscreen", "QT_QUICK_BACKEND": "software"},
+        capture_output=True, text=True, timeout=15,
+    )
+    assert result.returncode == 0, result.stderr

@@ -215,3 +215,34 @@ def test_all_errors_are_reported_together(tmp_path):
     assert "fps" in message
     assert "command" in message
     assert "handover.type" in message
+
+
+def test_console_subcategories_route_roms(tmp_path):
+    from mediahub.library import apply_library
+
+    raw = json.loads(EXAMPLE.read_text())
+    games = raw["categories"][1]
+    games["subcategories"] = [
+        {"id": "snes", "title": "Super Nintendo"},
+        {"id": "nes", "title": "Nintendo 8-bit"},
+    ]
+    snes = raw["emulators"][0]
+    snes.update(category="snes", rom_dirs=[str(tmp_path)])
+    raw["emulators"].append(dict(snes, id="nes-test", category="nes", extensions=[".nes"]))
+    (tmp_path / "Harvest Moon.sfc").touch()
+    (tmp_path / "NES Game.nes").touch()
+
+    config = validate(raw, tmp_path)
+    assert apply_library(config) == []
+    games = config["categories"][1]
+    assert [item["id"] for item in games["items"]] == ["steam-big-picture"]
+    super_nintendo, nintendo = games["subcategories"]
+    assert super_nintendo["items"] == [find_item(config, "rom-harvest-moon")]
+    assert nintendo["items"] == [find_item(config, "rom-nes-game")]
+
+
+def test_subcategory_id_cannot_duplicate_top_level_id(tmp_path):
+    raw = minimal_config()
+    raw["categories"][0]["subcategories"] = [{"id": "streaming", "title": "Duplicate"}]
+    with pytest.raises(ConfigError, match=r"categories\[0\]\.subcategories\[0\]\.id: duplicate"):
+        validate(raw, tmp_path)

@@ -18,23 +18,27 @@ Window {
     readonly property bool showPointer: startWindowed
     property int animMs: animations ? 240 : 0
     property int categoryIndex: 0
-    property var tileIndexes: []
+    property var tileIndexes: ({})
+    property var section: null
     property date now: new Date()
     readonly property var currentCategory: cfg.categories[categoryIndex]
-    readonly property var currentItems: currentCategory.items
+    readonly property string sectionTitle: section ? section.title : ""
+    readonly property var currentItems: section
+        ? section.items.concat([{title: "Tillbaka", back: true}])
+        : currentCategory.items.concat((currentCategory.subcategories || []).map(function(child) {
+            return {title: child.title, subtitle: "Öppna kategori", section: child}
+        }))
     readonly property real s: Math.min(width / 1280, height / 720)
     readonly property var uiLocale: Qt.locale(settings.language === "en" ? "en_GB" : "sv_SE")
-    readonly property color accent: currentCategory && currentCategory.theme
-        ? currentCategory.theme
-        : "#4d9dff"
+    readonly property color accent: (section && section.theme) || currentCategory.theme || "#4d9dff"
     readonly property var ssCfg: settings.screensaver || ({})
     readonly property var photoList: JSON.parse(slideshowPhotos)
     readonly property bool ssAvailable: ssCfg.enabled !== false && photoList.length > 0
     readonly property var footerHints: gamepad.connected
         ? ["\u2190 \u2192  Bläddra", "LB / RB  Kategori", "A  Starta", "Y  Bildspel",
-           "Start  Meny"]
+           section ? "B  Tillbaka" : "Start  Meny"]
         : ["\u2190 \u2192  Bläddra", "PgUp / PgDn  Kategori", "Enter  Starta",
-           "S  Bildspel", "Esc  Meny"]
+           "S  Bildspel", section ? "Esc  Tillbaka" : "Esc  Meny"]
 
     function noteActivity() {
         if (idleTimer.running)
@@ -75,18 +79,36 @@ Window {
         slideshow.begin()
     }
 
-    function tileIndexFor(catIndex) {
-        var items = cfg.categories[catIndex].items
-        var idx = tileIndexes[catIndex]
-        if (typeof idx !== "number" || idx < 0 || idx >= items.length)
-            return 0
-        return idx
+    function selectionKey() {
+        return section ? section.id : currentCategory.id
     }
 
-    function setTileIndex(catIndex, index) {
-        var copy = tileIndexes.slice()
-        copy[catIndex] = index
+    function tileIndexFor() {
+        var idx = tileIndexes[selectionKey()]
+        return typeof idx === "number" && idx >= 0 && idx < currentItems.length ? idx : 0
+    }
+
+    function setTileIndex(index) {
+        var copy = Object.assign({}, tileIndexes)
+        copy[selectionKey()] = index
         tileIndexes = copy
+    }
+
+    function centerSelection() {
+        Qt.callLater(function() { tileList.centerOn(root.tileIndexFor()) })
+    }
+
+    function goBack() {
+        if (slideshow.active) {
+            slideshow.wake()
+            return true
+        }
+        if (!section || launcher.busy)
+            return false
+        noteActivity()
+        section = null
+        centerSelection()
+        return true
     }
 
     function selectCategory(index) {
@@ -95,8 +117,9 @@ Window {
             return
         }
         noteActivity()
+        section = null
         categoryIndex = index
-        Qt.callLater(function() { tileList.centerOn(root.tileIndexFor(root.categoryIndex)) })
+        centerSelection()
     }
 
     function moveTile(delta) {
@@ -108,8 +131,8 @@ Window {
         var count = currentItems.length
         if (count === 0)
             return
-        var next = (tileIndexFor(categoryIndex) + delta + count) % count
-        setTileIndex(categoryIndex, next)
+        var next = (tileIndexFor() + delta + count) % count
+        setTileIndex(next)
         Qt.callLater(function() { tileList.centerOn(next) })
     }
 
@@ -127,12 +150,20 @@ Window {
         if (launcher.busy)
             return
         if (typeof index === "number")
-            setTileIndex(categoryIndex, index)
+            setTileIndex(index)
         var items = currentItems
-        var idx = typeof index === "number" ? index : tileIndexFor(categoryIndex)
+        var idx = typeof index === "number" ? index : tileIndexFor()
         if (idx >= 0 && idx < items.length) {
-            startingTitle = items[idx].title
-            launcher.start(items[idx].id)
+            var item = items[idx]
+            if (item.section) {
+                section = item.section
+                centerSelection()
+            } else if (item.back) {
+                goBack()
+            } else {
+                startingTitle = item.title
+                launcher.start(item.id)
+            }
         }
     }
 
@@ -174,7 +205,10 @@ Window {
         Keys.onRightPressed: root.moveTile(1)
         Keys.onReturnPressed: root.activate()
         Keys.onEnterPressed: root.activate()
-        Keys.onEscapePressed: systemMenu.open()
+        Keys.onEscapePressed: {
+            if (!root.goBack())
+                systemMenu.open()
+        }
 
         MouseArea {
             anchors.fill: parent
@@ -186,7 +220,7 @@ Window {
 
         Component.onCompleted: {
             keyLayer.forceActiveFocus()
-            Qt.callLater(function() { tileList.centerOn(root.tileIndexFor(0)) })
+            root.centerSelection()
         }
 
         Item {
@@ -282,6 +316,24 @@ Window {
             anchors.left: parent.left
             anchors.right: parent.right
 
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                text: root.sectionTitle
+                visible: root.section !== null
+                color: "#e9eefb"
+                font.pixelSize: 22 * root.s
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                text: "Inga spel hittades"
+                visible: root.section !== null && root.section.items.length === 0
+                color: "#7c879c"
+                font.pixelSize: 18 * root.s
+            }
+
             Flickable {
                 id: tileList
                 anchors.centerIn: parent
@@ -325,13 +377,13 @@ Window {
                             title: modelData.title
                             subtitle: modelData.subtitle || ""
                             iconSource: modelData.icon || ""
-                            focused: index === root.tileIndexFor(root.categoryIndex)
+                            focused: index === root.tileIndexFor()
                             showPointer: root.showPointer
                             animations: root.animations
                             animMs: root.animMs
                             onHovered: {
                                 root.noteActivity()
-                                root.setTileIndex(root.categoryIndex, index)
+                                root.setTileIndex(index)
                             }
                             onActivated: root.activate(index)
                         }
@@ -419,7 +471,7 @@ Window {
         }
         function onBackPressed() {
             if (systemMenu.visible) { systemMenu.close(); return }
-            if (slideshow.active) slideshow.wake()
+            root.goBack()
         }
     }
 

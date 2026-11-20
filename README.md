@@ -159,6 +159,24 @@ samtidigt. Relativa sökvägar tolkas relativt konfigurationsfilen, `~` expander
 - `settings.animations: false` stänger av rörliga partiklar och övergångar;
   `settings.fps: 30` ger färre partiklar och lämpar sig för 4K/30 Hz-läget.
 
+### Underkategorier för spel
+
+`subcategories` är en valfri lista under en huvudkategori. Varje
+underkategori har ett unikt `id` (även jämfört med huvudkategorier), en `title`
+och valfria `items` och `theme`. En underkategori kan vara tom.
+
+Exempelkonfigurationen visar **Super Nintendo** (`snes`) och **Nintendo 8-bit**
+(`nes`) under **Spel**, där Steam ligger kvar. Snes9x har `"category": "snes"`,
+så SNES-spelen visas där. Nintendo 8-bit är tom tills du lägger till en
+NES-emulator med `"category": "nes"`, rätt startkommando och `.nes` som filändelse.
+Öppna en underkategori med A/Enter och gå tillbaka med B/Esc eller kaklet
+Tillbaka.
+
+Befintliga installationer behåller sin konfiguration. För att använda den nya
+indelningen, kopiera `subcategories` från exemplet till kategorin `games` i din
+konfiguration och ändra Snes9x-postens `category` från `games` till `snes`.
+Äldre konfigurationer fungerar oförändrade om du inte gör detta.
+
 ### Ikoner och omslag
 
 Lägg bara en bild i `~/.config/media-hub/icons/` med postens `id` som namn,
