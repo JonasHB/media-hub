@@ -18,6 +18,7 @@ from .gamepad import Gamepad
 from .handover import Handover
 from .library import apply_library, report_missing_icons
 from .photos import scan_photos
+from .system import SystemActions
 
 APP_ROOT = Path(__file__).resolve().parent.parent
 QML_DIR = APP_ROOT / "qml"
@@ -152,6 +153,8 @@ def main(argv: list[str] | None = None) -> int:
     context.setContextProperty("screenshotDelay", args.screenshot_delay)
     handover = Handover(config, engine)
     context.setContextProperty("launcher", handover)
+    system_actions = SystemActions(app)
+    context.setContextProperty("systemActions", system_actions)
     gamepad = Gamepad(engine, config["settings"]["exit_combo"])
     context.setContextProperty("gamepad", gamepad)
     app.aboutToQuit.connect(gamepad.shutdown)

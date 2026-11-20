@@ -196,6 +196,7 @@ class Gamepad(QObject):
             "left_shoulder": lambda: self.categoryStep.emit(-1),
             "right_shoulder": lambda: self.categoryStep.emit(1),
             "start": self.systemMenuPressed.emit,
+            "back": self.systemMenuPressed.emit,
             "y": self.screensaverPressed.emit,
         }
 

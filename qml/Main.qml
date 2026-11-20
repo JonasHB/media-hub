@@ -30,12 +30,36 @@ Window {
     readonly property var photoList: JSON.parse(slideshowPhotos)
     readonly property bool ssAvailable: ssCfg.enabled !== false && photoList.length > 0
     readonly property var footerHints: gamepad.connected
-        ? ["\u2190 \u2192  Bläddra", "LB / RB  Kategori", "A  Starta", "Y  Bildspel"]
-        : ["\u2190 \u2192  Bläddra", "\u2191 \u2193  Kategori", "Enter  Starta", "S  Bildspel"]
+        ? ["\u2190 \u2192  Bläddra", "LB / RB  Kategori", "A  Starta", "Y  Bildspel",
+           "Start  Meny"]
+        : ["\u2190 \u2192  Bläddra", "\u2191 \u2193  Kategori", "Enter  Starta",
+           "S  Bildspel", "Esc  Meny"]
 
     function noteActivity() {
         if (idleTimer.running)
             idleTimer.restart()
+    }
+
+    function runSystemAction(action) {
+        if (action === "resume") {
+            systemMenu.close()
+            return
+        }
+        systemMenu.visible = false
+        if (action === "quit") {
+            systemActions.quit()
+            return
+        }
+        var done = false
+        if (action === "suspend")
+            done = systemActions.suspend()
+        else if (action === "logout")
+            done = systemActions.logout()
+        else if (action === "poweroff")
+            done = systemActions.poweroff()
+        if (!done)
+            toast.show("Kunde inte utföra åtgärden – se loggen")
+        keyLayer.forceActiveFocus()
     }
 
     function startSlideshow() {
@@ -143,6 +167,7 @@ Window {
         Keys.onDownPressed: root.changeCategory(1)
         Keys.onReturnPressed: root.activate()
         Keys.onEnterPressed: root.activate()
+        Keys.onEscapePressed: systemMenu.open()
 
         MouseArea {
             anchors.fill: parent
@@ -348,16 +373,26 @@ Window {
     Connections {
         target: gamepad
         function onNavigate(direction) {
+            if (systemMenu.visible) { systemMenu.move(direction); return }
             if (slideshow.active) { slideshow.wake(); return }
             root.moveTile(direction)
         }
         function onCategoryStep(direction) {
+            if (systemMenu.visible) { systemMenu.move(direction); return }
             if (slideshow.active) { slideshow.wake(); return }
             root.changeCategory(direction)
         }
         function onSelectPressed() {
+            if (systemMenu.visible) { systemMenu.activate(); return }
             if (slideshow.active) { slideshow.wake(); return }
             root.activate()
+        }
+        function onSystemMenuPressed() {
+            if (slideshow.active) { slideshow.wake(); return }
+            if (systemMenu.visible)
+                systemMenu.close()
+            else
+                systemMenu.open()
         }
         function onScreensaverPressed() {
             if (slideshow.active) slideshow.wake()
@@ -389,6 +424,19 @@ Window {
         }
     }
 
+    SystemMenu {
+        id: systemMenu
+        anchors.fill: parent
+        s: root.s
+        accent: root.accent
+        animMs: root.animMs
+        onActionChosen: function(action) { root.runSystemAction(action) }
+        onClosed: {
+            root.noteActivity()
+            keyLayer.forceActiveFocus()
+        }
+    }
+
     Timer {
         id: idleTimer
         interval: Math.max(1000, (root.ssCfg.idle_seconds === undefined
@@ -398,6 +446,7 @@ Window {
             && (root.ssCfg.idle_seconds === undefined || root.ssCfg.idle_seconds > 0)
             && !launcher.busy
             && !slideshow.active
+            && !systemMenu.visible
         onTriggered: root.startSlideshow()
     }
 

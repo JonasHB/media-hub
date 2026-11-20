@@ -208,6 +208,17 @@ Så räcker det att lägga `Super Mario All-Stars.png` i
   menyval. Skärmsläckaren startar aldrig ovanpå en extern applikation.
 - Hittas inga foton visas en notis med hänvisning till `screensaver.folders`.
 
+## Systemmeny
+
+**Start** eller **Select** på handkontrollen (eller **Esc** på tangentbordet) öppnar
+systemmenyn: Fortsätt, Viloläge, Logga ut, Stäng av och Stäng launcher. Navigera
+med D-pad/spak eller piltangenter, välj med **A**/Enter och stäng med **B**/Esc.
+
+- Viloläge, utloggning och avstängning körs via `systemctl`/`loginctl` som din
+  användare. Avstängning kan kräva polkit-behörighet första gången.
+- "Stäng launcher" avslutar bara Media Hub och lämnar skrivbordet kvar.
+- Menyn pausar skärmsläckaren och gamepad-navigeringen bakom panelen.
+
 ## Handover och AntiMicroX
 
 Launcherns WM_CLASS är `media-hub media-hub` (sätts via applikationsnamn och

@@ -37,6 +37,7 @@ def test_virtual_controller_navigation(qt_app):
     gamepad.categoryStep.connect(lambda direction: events.append(("cat", direction)))
     gamepad.selectPressed.connect(lambda: events.append(("select",)))
     gamepad.backPressed.connect(lambda: events.append(("back",)))
+    gamepad.systemMenuPressed.connect(lambda: events.append(("menu",)))
 
     try:
         gamepad._poll()
@@ -53,6 +54,12 @@ def test_virtual_controller_navigation(qt_app):
         sdl2.SDL_JoystickSetVirtualButton(joystick, 1, 1)
         gamepad._poll()
         assert events.count(("back",)) == 1
+        sdl2.SDL_JoystickSetVirtualButton(joystick, 1, 0)
+        gamepad._poll()
+
+        sdl2.SDL_JoystickSetVirtualButton(joystick, 4, 1)
+        gamepad._poll()
+        assert events.count(("menu",)) == 1, "Select must open the system menu"
 
         sdl2.SDL_JoystickSetVirtualAxis(joystick, 0, 30000)
         gamepad._poll()
