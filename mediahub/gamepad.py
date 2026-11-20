@@ -54,6 +54,7 @@ class RepeatAxis:
 
 class Gamepad(QObject):
     navigate = Signal(int)
+    verticalStep = Signal(int)
     categoryStep = Signal(int)
     selectPressed = Signal()
     backPressed = Signal()
@@ -187,7 +188,7 @@ class Gamepad(QObject):
 
         step = self._axis_y.update(y, now)
         if step is not None:
-            self.categoryStep.emit(step)
+            self.verticalStep.emit(step)
 
     def _poll_buttons(self) -> None:
         actions = {

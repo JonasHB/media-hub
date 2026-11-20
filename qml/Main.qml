@@ -33,7 +33,7 @@ Window {
     readonly property var footerHints: gamepad.connected
         ? ["\u2190 \u2192  Bläddra", "LB / RB  Kategori", "A  Starta", "Y  Bildspel",
            "Start  Meny"]
-        : ["\u2190 \u2192  Bläddra", "\u2191 \u2193  Kategori", "Enter  Starta",
+        : ["\u2190 \u2192  Bläddra", "PgUp / PgDn  Kategori", "Enter  Starta",
            "S  Bildspel", "Esc  Meny"]
 
     function noteActivity() {
@@ -162,12 +162,16 @@ Window {
             if (event.key === Qt.Key_S && !slideshow.active) {
                 root.startSlideshow()
                 event.accepted = true
+            } else if (event.key === Qt.Key_PageUp) {
+                root.changeCategory(-1)
+                event.accepted = true
+            } else if (event.key === Qt.Key_PageDown) {
+                root.changeCategory(1)
+                event.accepted = true
             }
         }
         Keys.onLeftPressed: root.moveTile(-1)
         Keys.onRightPressed: root.moveTile(1)
-        Keys.onUpPressed: root.changeCategory(-1)
-        Keys.onDownPressed: root.changeCategory(1)
         Keys.onReturnPressed: root.activate()
         Keys.onEnterPressed: root.activate()
         Keys.onEscapePressed: systemMenu.open()
@@ -389,6 +393,10 @@ Window {
             if (systemMenu.visible) { systemMenu.move(direction); return }
             if (slideshow.active) { slideshow.wake(); return }
             root.changeCategory(direction)
+        }
+        function onVerticalStep(direction) {
+            if (systemMenu.visible) { systemMenu.move(direction); return }
+            if (slideshow.active) { slideshow.wake(); return }
         }
         function onSelectPressed() {
             if (systemMenu.visible) { systemMenu.activate(); return }

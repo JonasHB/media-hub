@@ -208,6 +208,21 @@ Så räcker det att lägga `Super Mario All-Stars.png` i
   menyval. Skärmsläckaren startar aldrig ovanpå en extern applikation.
 - Hittas inga foton visas en notis med hänvisning till `screensaver.folders`.
 
+## Styrning
+
+| Inmatning | Funktion |
+|---|---|
+| D-pad/spak vågrätt | Bläddra mellan kakel |
+| LB / RB | Byt kategori (endast dessa) |
+| A | Starta markerad post |
+| B | Tillbaka/stäng meny |
+| Y | Starta bildspelet |
+| Start / Select | Systemmeny |
+| Lodrät D-pad/spak | Endast i menyer |
+
+Tangentbord: piltangenter bläddrar, **PgUp/PgDn** byter kategori, Enter startar,
+**S** startar bildspelet och **Esc** öppnar menyn.
+
 ## Systemmeny
 
 **Start** eller **Select** på handkontrollen (eller **Esc** på tangentbordet) öppnar

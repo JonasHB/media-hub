@@ -35,6 +35,7 @@ def test_virtual_controller_navigation(qt_app):
     gamepad.connectedChanged.connect(lambda: events.append(("connected", gamepad.connected)))
     gamepad.navigate.connect(lambda direction: events.append(("nav", direction)))
     gamepad.categoryStep.connect(lambda direction: events.append(("cat", direction)))
+    gamepad.verticalStep.connect(lambda direction: events.append(("vert", direction)))
     gamepad.selectPressed.connect(lambda: events.append(("select",)))
     gamepad.backPressed.connect(lambda: events.append(("back",)))
     gamepad.systemMenuPressed.connect(lambda: events.append(("menu",)))
@@ -68,7 +69,8 @@ def test_virtual_controller_navigation(qt_app):
         sdl2.SDL_JoystickSetVirtualAxis(joystick, 0, 0)
         sdl2.SDL_JoystickSetVirtualAxis(joystick, 1, -30000)
         gamepad._poll()
-        assert ("cat", -1) in events
+        assert ("vert", -1) in events
+        assert ("cat", -1) not in events
 
         sdl2.SDL_JoystickSetVirtualButton(joystick, 9, 1)
         gamepad._poll()
