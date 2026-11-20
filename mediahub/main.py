@@ -125,6 +125,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         log_file = default_log_path()
     setup_logging(log_file)
+    logging.getLogger("mediahub").info("media-hub %s startar", __version__)
 
     QLocale.setDefault(QLocale(QLocale.Language.Swedish, QLocale.Country.Sweden))
 

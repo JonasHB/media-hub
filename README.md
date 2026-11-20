@@ -218,6 +218,7 @@ Så räcker det att lägga `Super Mario All-Stars.png` i
 | B | Tillbaka/stäng meny |
 | Y | Starta bildspelet |
 | Start / Select | Systemmeny |
+| Guide | Begär stängning av extern app |
 | Lodrät D-pad/spak | Endast i menyer |
 
 Tangentbord: piltangenter bläddrar, **PgUp/PgDn** byter kategori, Enter startar,
