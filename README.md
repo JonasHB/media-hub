@@ -22,7 +22,7 @@ Eget skärmtangentbord och röststyrning återstår.
 
 - Linux med X11 (utvecklad mot Ubuntu MATE 24.04).
 - Python 3.11+ och `python3-venv`.
-- Fungerande OpenGL. Testat med mjukvarurendering; målallen är 60 FPS.
+- Fungerande OpenGL. Testat med mjukvarurendering; målet är 60 FPS.
 - Valfritt: Xbox 360-handkontroll, Firefox, Snes9x via Flatpak, AntiMicroX 3.1.4.
 
 ## Installation
@@ -37,6 +37,9 @@ Installeras i `~/.local/share/media-hub` (ändra med `MEDIAHUB_PREFIX`).
 Konfigurationen hamnar i `~/.config/media-hub/config.json` och skapas bara om
 den saknas. Flex Launcher och AntiMicroX rörs inte.
 
+Uppdatera en befintlig installation genom att köra `./install.sh` igen –
+källkoden skrivs över men konfigurationen och ikonerna bevaras.
+
 Utveckling direkt i repot:
 
 ```bash
@@ -47,10 +50,16 @@ python3 -m venv .venv
 
 ## Köra
 
-```bash
-media-hub via menyikonen, eller:
-~/.local/share/media-hub/.venv/bin/python -m mediahub
+Starta via menyikonen, eller från terminalen (installationskatalogen måste vara
+aktuell katalog):
 
+```bash
+cd ~/.local/share/media-hub && .venv/bin/python -m mediahub
+```
+
+Flaggor:
+
+```bash
 --windowed              fönsterläge för felsökning
 --size 1920x1080        fönsterstorlek i windowed-läge (test av hög upplösning)
 --config PATH           annan konfigurationsfil
@@ -202,7 +211,7 @@ Så räcker det att lägga `Super Mario All-Stars.png` i
 ## Handover och AntiMicroX
 
 Launcherns WM_CLASS är `media-hub media-hub` (sätts via applikationsnamn och
-desktop-fil). Verifiera på målmasinen med `xprop WM_CLASS` och välj fönstret.
+desktop-fil). Verifiera på målmaskinen med `xprop WM_CLASS` och välj fönstret.
 
 AntiMicroX 3.1.4 förväntas växla profil automatiskt via
 `~/.config/antimicrox/antimicrox_settings.ini` utifrån WM_CLASS:
