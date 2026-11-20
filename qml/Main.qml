@@ -418,6 +418,7 @@ Window {
             if (slideshow.active) slideshow.wake()
         }
         function onBackPressed() {
+            if (systemMenu.visible) { systemMenu.close(); return }
             if (slideshow.active) slideshow.wake()
         }
     }
