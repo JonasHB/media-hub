@@ -60,8 +60,8 @@ Window {
         var done = false
         if (action === "suspend")
             done = systemActions.suspend()
-        else if (action === "logout")
-            done = systemActions.logout()
+        else if (action === "reboot")
+            done = systemActions.reboot()
         else if (action === "poweroff")
             done = systemActions.poweroff()
         if (!done)

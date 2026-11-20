@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
-import shutil
 import subprocess
 
 from PySide6.QtCore import QCoreApplication, QObject, Slot
@@ -26,11 +24,8 @@ class SystemActions(QObject):
         return _run(["systemctl", "suspend"])
 
     @Slot(result=bool)
-    def logout(self) -> bool:
-        session = os.environ.get("XDG_SESSION_ID")
-        if session and shutil.which("loginctl"):
-            return _run(["loginctl", "terminate-session", session])
-        return _run(["mate-session-save", "--logout"])
+    def reboot(self) -> bool:
+        return _run(["systemctl", "reboot"])
 
     @Slot(result=bool)
     def poweroff(self) -> bool:

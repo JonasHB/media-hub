@@ -14,7 +14,7 @@ FocusScope {
     readonly property var entries: [
         { action: "resume", title: "Fortsätt", subtitle: "Tillbaka till menyn" },
         { action: "suspend", title: "Viloläge", subtitle: "Datorn går ner i viloläge" },
-        { action: "logout", title: "Logga ut", subtitle: "Till MATE-inloggningen" },
+        { action: "reboot", title: "Starta om", subtitle: "Startar om datorn" },
         { action: "poweroff", title: "Stäng av", subtitle: "Stänger av datorn" },
         { action: "quit", title: "Stäng launcher", subtitle: "Avsluta Media Hub" }
     ]

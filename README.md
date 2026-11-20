@@ -249,11 +249,11 @@ Tangentbord: piltangenter bläddrar, **PgUp/PgDn** byter kategori, Enter startar
 ## Systemmeny
 
 **Start** eller **Select** på handkontrollen (eller **Esc** på tangentbordet) öppnar
-systemmenyn: Fortsätt, Viloläge, Logga ut, Stäng av och Stäng launcher. Navigera
+systemmenyn: Fortsätt, Viloläge, Starta om, Stäng av och Stäng launcher. Navigera
 med D-pad/spak eller piltangenter, välj med **A**/Enter och stäng med **B**/Esc.
 
-- Viloläge, utloggning och avstängning körs via `systemctl`/`loginctl` som din
-  användare. Avstängning kan kräva polkit-behörighet första gången.
+- Viloläge, omstart och avstängning körs via `systemctl` som din användare.
+  Omstart och avstängning kan kräva polkit-behörighet.
 - "Stäng launcher" avslutar bara Media Hub och lämnar skrivbordet kvar.
 - Menyn pausar skärmsläckaren och gamepad-navigeringen bakom panelen.
 
