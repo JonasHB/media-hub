@@ -62,6 +62,15 @@ QTest.keyClick(window, Qt.Key_Right)
 QTest.keyClick(window, Qt.Key_Return)
 assert window.property('sectionTitle') == 'Super Nintendo'
 assert [item['title'] for item in window.property('currentItems').toVariant()] == ['Harvest Moon', 'Tillbaka']
+arrow = image_for(window.contentItem(), 'back-arrow.svg')
+assert arrow is not None and arrow.isVisible()
+button = arrow.parentItem()
+assert button.width() == button.height() and button.property('radius') == button.width() / 2
+QTest.keyClick(window, Qt.Key_Right)
+QTest.keyClick(window, Qt.Key_Return)
+assert window.property('sectionTitle') == ''
+QTest.keyClick(window, Qt.Key_Return)
+assert window.property('sectionTitle') == 'Super Nintendo'
 gamepad.backPressed.emit()
 assert window.property('sectionTitle') == ''
 QTest.keyClick(window, Qt.Key_Right)

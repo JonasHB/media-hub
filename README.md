@@ -169,8 +169,8 @@ Exempelkonfigurationen visar **Super Nintendo** (`snes`) och **Nintendo 8-bit**
 (`nes`) under **Spel**, där Steam ligger kvar. Snes9x har `"category": "snes"`,
 så SNES-spelen visas där. Nintendo 8-bit är tom tills du lägger till en
 NES-emulator med `"category": "nes"`, rätt startkommando och `.nes` som filändelse.
-Öppna en underkategori med A/Enter och gå tillbaka med B/Esc eller kaklet
-Tillbaka.
+Öppna en underkategori med A/Enter och gå tillbaka med B/Esc eller den runda
+tillbakapilen.
 
 Befintliga installationer behåller sin konfiguration. För att använda den nya
 indelningen, kopiera `subcategories` från exemplet till kategorin `games` i din

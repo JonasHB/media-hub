@@ -6,6 +6,7 @@ Item {
     property string subtitle: ""
     property string iconSource: ""
     property bool folder: false
+    property bool backButton: false
     property bool focused: false
     property bool animations: true
     property bool showPointer: true
@@ -29,6 +30,7 @@ Item {
     }
 
     Rectangle {
+        visible: !tile.backButton
         anchors.fill: card
         anchors.margins: -10 * tile.s
         radius: 28 * tile.s
@@ -39,6 +41,7 @@ Item {
 
     Rectangle {
         id: card
+        visible: !tile.backButton
         anchors.fill: parent
         radius: 20 * tile.s
         border.width: tile.focused ? Math.max(2, 2 * tile.s) : Math.max(1, tile.s)
@@ -142,8 +145,34 @@ Item {
         }
     }
 
+    Rectangle {
+        id: backCircle
+        visible: tile.backButton
+        anchors.centerIn: parent
+        width: 96 * tile.s
+        height: width
+        radius: width / 2
+        color: tile.focused ? Qt.darker(tile.accent, 2.9) : "#151c2b"
+        border.color: tile.focused ? tile.accent : "#64728c"
+        border.width: Math.max(1, (tile.focused ? 3 : 2) * tile.s)
+
+        Image {
+            visible: tile.backButton
+            anchors.centerIn: parent
+            width: 44 * tile.s
+            height: width
+            source: tile.backButton ? "../assets/back-arrow.svg" : ""
+            sourceSize.width: Math.ceil(width * 2)
+        }
+    }
+
     MouseArea {
-        anchors.fill: parent
+        anchors.centerIn: parent
+        width: tile.backButton ? backCircle.width : tile.width
+        height: tile.backButton ? backCircle.height : tile.height
+        Accessible.role: Accessible.Button
+        Accessible.name: tile.title
+        Accessible.onPressAction: tile.activated()
         hoverEnabled: true
         cursorShape: tile.showPointer ? Qt.PointingHandCursor : Qt.BlankCursor
         onEntered: tile.hovered()

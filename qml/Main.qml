@@ -380,6 +380,7 @@ Window {
                             subtitle: modelData.subtitle || ""
                             iconSource: modelData.icon || ""
                             folder: !!modelData.section
+                            backButton: !!modelData.back
                             focused: index === root.tileIndexFor()
                             showPointer: root.showPointer
                             animations: root.animations
