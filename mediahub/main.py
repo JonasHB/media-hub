@@ -9,6 +9,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from PySide6.QtCore import QEvent, QLocale, Qt, QTimer, QUrl
+from PySide6.QtNetwork import QLocalServer
 from PySide6.QtGui import QCursor, QGuiApplication, QKeyEvent
 from PySide6.QtQml import QQmlApplicationEngine
 
@@ -23,6 +24,23 @@ from .system import SystemActions
 APP_ROOT = Path(__file__).resolve().parent.parent
 QML_DIR = APP_ROOT / "qml"
 
+
+
+def listen_for_controller_return(parent, runtime_dir, request_close):
+    server = QLocalServer(parent)
+    server.setSocketOptions(QLocalServer.SocketOption.UserAccessOption)
+
+    def handle_connection():
+        while server.hasPendingConnections():
+            connection = server.nextPendingConnection()
+            connection.abort()
+            connection.deleteLater()
+            request_close()
+
+    server.newConnection.connect(handle_connection)
+    if not server.listen(str(Path(runtime_dir) / "media-hub-return.sock")):
+        logging.getLogger(__name__).warning("Controller return listener: %s", server.errorString())
+    return server
 
 def default_config_path() -> Path:
     base = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
@@ -177,6 +195,10 @@ def main(argv: list[str] | None = None) -> int:
     handover.externalClosed.connect(lambda _item_id: gamepad.setActive(True))
     gamepad.guidePressed.connect(handover.request_close)
     gamepad.exitComboPressed.connect(handover.request_close)
+    runtime_dir = os.environ.get("XDG_RUNTIME_DIR")
+    if runtime_dir and not args.screenshot:
+        return_server = listen_for_controller_return(app, runtime_dir, handover.request_close)
+        app.aboutToQuit.connect(return_server.close)
 
     library_log = logging.getLogger("mediahub.library")
     for warning in library_warnings:
