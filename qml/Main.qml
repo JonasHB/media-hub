@@ -26,7 +26,7 @@ Window {
     readonly property var currentItems: section
         ? section.items.concat([{title: "Tillbaka", back: true}])
         : currentCategory.items.concat((currentCategory.subcategories || []).map(function(child) {
-            var asset = ["snes", "nes", "wii"].indexOf(child.id) !== -1 ? child.id : "folder"
+            var asset = ["snes", "nes", "wii", "steam"].indexOf(child.id) !== -1 ? child.id : "folder"
             return {title: child.title, subtitle: "Öppna kategori", section: child,
                     icon: Qt.resolvedUrl("assets/" + asset + ".svg")}
         }))

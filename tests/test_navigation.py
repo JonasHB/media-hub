@@ -33,6 +33,7 @@ config = load_config('config/example.json')
 config['categories'][1]['subcategories'].extend([
     {'id': 'wii', 'title': 'Wii', 'items': []},
     {'id': 'other', 'title': 'Other', 'items': []},
+    {'id': 'steam', 'title': 'Steam', 'items': []},
 ])
 config['emulators'][0]['rom_dirs'] = [sys.argv[1]]
 assert apply_library(config) == []
@@ -75,7 +76,7 @@ for name in ('prime-video.svg', 'svt-play.svg'):
 
 QTest.keyClick(window, Qt.Key_PageDown)
 items = window.property('currentItems').toVariant()
-for item, logo in zip(items[1:], ['snes.svg', 'nes.svg', 'wii.svg', 'folder.svg'], strict=True):
+for item, logo in zip(items[1:], ['snes.svg', 'nes.svg', 'wii.svg', 'folder.svg', 'steam.svg'], strict=True):
     assert item['section']
     url = item['icon']
     assert url.fileName() == logo and not QImage(url.toLocalFile()).isNull()

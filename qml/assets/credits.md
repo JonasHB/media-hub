@@ -5,3 +5,5 @@
 - `wii.svg`: https://commons.wikimedia.org/wiki/File:Wii.svg (ljus variant för mörk bakgrund)
 
 Logotyperna används för att identifiera respektive konsol. Varumärkena tillhör Nintendo.
+
+- `steam.svg`: Valve Steam client, `controller_base/images/api/knockout/sc_button_steam.svg`.
