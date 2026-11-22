@@ -144,7 +144,7 @@ def test_handover_waits_for_detached_window(qt_app, tmp_path, monkeypatch):
     window = FAKE_WINDOW.replace('"Navigator", "firefox_firefox"', '"DetachedTest", "DetachedTest"')
     script = "import time; time.sleep(0.8)\n" + window.replace("time.sleep(30)", "time.sleep(2)")
     child = [sys.executable, "-c", script]
-    command = [sys.executable, "-c", f"import subprocess; subprocess.Popen({child!r})"]
+    command = [sys.executable, "-c", f"import subprocess; subprocess.Popen({child!r}); raise SystemExit(1)"]
     config = make_config(tmp_path, command, {
         "type": "window", "window_class": "DetachedTest",
         "start_timeout_ms": 5000, "detached_launch": True,

@@ -291,7 +291,8 @@ launchern med samma menyval markerat.
   `start_timeout_ms` och läs `handover:`-raderna i loggen.
   För startkommandon som lämnar över till en annan process, t.ex. Steam,
   låter `handover.detached_launch: true` Media Hub vänta hela starttiden
-  på fönstret när startkommandot avslutas utan fel.
+  på fönstret oavsett startkommandots slutkod. Om inget fönster dyker upp
+  loggas slutkoden vid timeout.
 - Långsam start: launchern visar "Startar …" direkt och loggar
   `window ... active after N ms` när fönstret hittas. Är N litet ligger tiden i
   programmets egen uppstart (t.ex. Firefox kallstart med tillägg), inte i

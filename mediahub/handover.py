@@ -212,11 +212,12 @@ class Handover(QObject):
                 self.externalActive.emit(self._item["id"])
                 return
 
-            process_done = self._process is not None and self._process.poll() is not None
-            if process_done and self._grace_deadline is None and (
-                not handover.get("detached_launch") or self._process.returncode != 0
-            ):
+            status = self._process.poll() if self._process is not None else None
+            if status is not None and self._grace_deadline is None and not handover.get("detached_launch"):
                 self._grace_deadline = now + PROCESS_EXIT_GRACE
+
+            if status is not None and handover.get("detached_launch") and now >= self._deadline:
+                log.warning("detached start command exited with status %s", status)
 
             if self._grace_deadline is not None:
                 if now >= min(self._grace_deadline, self._deadline):
