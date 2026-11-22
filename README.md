@@ -289,6 +289,9 @@ launchern med samma menyval markerat.
 - Fel i konfigurationen: programmet skriver alla fel med sökväg och avslutar.
 - Handover fastnar: kontrollera `window_class` med `xprop WM_CLASS`, öka
   `start_timeout_ms` och läs `handover:`-raderna i loggen.
+  För startkommandon som lämnar över till en annan process, t.ex. Steam,
+  låter `handover.detached_launch: true` Media Hub vänta hela starttiden
+  på fönstret när startkommandot avslutas utan fel.
 - Långsam start: launchern visar "Startar …" direkt och loggar
   `window ... active after N ms` när fönstret hittas. Är N litet ligger tiden i
   programmets egen uppstart (t.ex. Firefox kallstart med tillägg), inte i

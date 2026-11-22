@@ -131,7 +131,8 @@
           "handover": {
             "type": "window",
             "window_class": "Steam",
-            "start_timeout_ms": 30000
+            "start_timeout_ms": 30000,
+            "detached_launch": true
           }
         }
       ],

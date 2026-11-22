@@ -213,7 +213,9 @@ class Handover(QObject):
                 return
 
             process_done = self._process is not None and self._process.poll() is not None
-            if process_done and self._grace_deadline is None:
+            if process_done and self._grace_deadline is None and (
+                not handover.get("detached_launch") or self._process.returncode != 0
+            ):
                 self._grace_deadline = now + PROCESS_EXIT_GRACE
 
             if self._grace_deadline is not None:

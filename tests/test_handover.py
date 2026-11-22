@@ -137,6 +137,30 @@ def test_handover_hides_and_restores_launcher(qt_app, tmp_path):
         handover._timer.stop()
 
 
+def test_handover_waits_for_detached_window(qt_app, tmp_path, monkeypatch):
+    import mediahub.handover as handover_module
+
+    monkeypatch.setattr(handover_module, "PROCESS_EXIT_GRACE", 0.1)
+    window = FAKE_WINDOW.replace('"Navigator", "firefox_firefox"', '"DetachedTest", "DetachedTest"')
+    script = "import time; time.sleep(0.8)\n" + window.replace("time.sleep(30)", "time.sleep(2)")
+    child = [sys.executable, "-c", script]
+    command = [sys.executable, "-c", f"import subprocess; subprocess.Popen({child!r})"]
+    config = make_config(tmp_path, command, {
+        "type": "window", "window_class": "DetachedTest",
+        "start_timeout_ms": 5000, "detached_launch": True,
+    })
+    handover = Handover(config)
+    events = []
+    handover.externalActive.connect(lambda item: events.append("active"))
+    handover.externalClosed.connect(lambda item: events.append("closed"))
+    try:
+        handover.start("target")
+        assert pump(handover, 4, lambda: "active" in events)
+        assert pump(handover, 4, lambda: "closed" in events)
+    finally:
+        handover._timer.stop()
+
+
 def test_handover_reports_early_exit(qt_app, tmp_path):
     config = make_config(tmp_path, [sys.executable, "-c", "pass"])
     handover = Handover(config)

@@ -571,7 +571,7 @@ def _validate_handover(v: _Validator, value: Any, path: str) -> dict | None:
 
     v.unknown_keys(
         handover,
-        {"type", "window_class", "profile", "start_timeout_ms", "restore_focus", "close_strategy", "fullscreen"},
+        {"type", "window_class", "profile", "start_timeout_ms", "restore_focus", "close_strategy", "fullscreen", "detached_launch"},
         path,
     )
 
@@ -607,6 +607,7 @@ def _validate_handover(v: _Validator, value: Any, path: str) -> dict | None:
         close_strategy = "graceful"
 
     fullscreen = v.boolean(handover.get("fullscreen", False), _join(path, "fullscreen"))
+    detached = v.boolean(handover.get("detached_launch", False), _join(path, "detached_launch"))
 
     return {
         "type": handover_type,
@@ -616,6 +617,7 @@ def _validate_handover(v: _Validator, value: Any, path: str) -> dict | None:
         "restore_focus": True if restore_focus is None else restore_focus,
         "close_strategy": close_strategy,
         "fullscreen": False if fullscreen is None else fullscreen,
+        "detached_launch": bool(detached),
     }
 
 
