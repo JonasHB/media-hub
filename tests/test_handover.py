@@ -97,6 +97,10 @@ def pump(handover, seconds, until):
     return False
 
 
+def test_class_matches_literal_name_with_spaces():
+    assert class_matches("stardew valley", ("Stardew Valley", "Stardew Valley"))
+
+
 def test_class_matches():
     assert class_matches("Navigator firefox_firefox", ("Navigator", "firefox_firefox"))
     assert class_matches("navigator FIREFOX_firefox", ("Navigator", "firefox_firefox"))

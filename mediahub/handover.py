@@ -26,9 +26,8 @@ def class_matches(configured: str, wm_class: tuple[str, str] | None) -> bool:
     instance = (instance or "").lower()
     klass = (klass or "").lower()
 
-    if len(parts) == 1:
-        wanted = parts[0].lower()
-        return wanted in (instance, klass)
+    if configured.strip().lower() in (instance, klass):
+        return True
     if len(parts) != 2:
         return False
     first, second = parts[0].lower(), parts[1].lower()
