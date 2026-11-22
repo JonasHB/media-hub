@@ -61,6 +61,7 @@ def test_ignores_runtimes_but_not_games_with_similar_names(tmp_path):
     manifest(root, "13", "Steam Linux Runtime 4.0")
     manifest(root, "14", "Custom Compatibility")
     (root / "steamapps/common/Custom Compatibility/compatibilitytool.vdf").touch()
+    manifest(root, "4690330", "Legacy Steam Runtime", directory="LegacySteamRuntime")
     manifest(root, "15", "Proton Pulse")
     assert [game.app_id for game in scan_steam_games(home=tmp_path)] == ["15"]
 

@@ -127,7 +127,7 @@ def _installed_game(path: Path) -> SteamGame | None:
     install_path = path.parent / "common" / directory
     if not install_path.is_dir():
         return None
-    if app_id == "228980" or _TOOL_NAME.fullmatch(title.strip()):
+    if app_id in {"228980", "4690330"} or _TOOL_NAME.fullmatch(title.strip()):
         return None
     if (install_path / "compatibilitytool.vdf").is_file():
         return None
