@@ -61,6 +61,7 @@ class Gamepad(QObject):
     systemMenuPressed = Signal()
     guidePressed = Signal()
     screensaverPressed = Signal()
+    profilesPressed = Signal()
     exitComboPressed = Signal()
     connectedChanged = Signal()
 
@@ -210,6 +211,7 @@ class Gamepad(QObject):
             "start": self.systemMenuPressed.emit,
             "back": self.systemMenuPressed.emit,
             "y": self.screensaverPressed.emit,
+            "x": self.profilesPressed.emit,
         }
 
         for name, button in BUTTONS.items():

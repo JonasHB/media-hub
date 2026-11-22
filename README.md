@@ -324,3 +324,17 @@ Gamepad testas med SDL:s virtuella handkontroll. Skärmdumpar kan verifieras med
 - [ ] Bildspel: auto-start efter inställd tid, Y/S-knappen, mjuka byten,
   diskret klocka och väckning utan oavsiktligt menyval.
 - [ ] Flex Launcher fungerar fortfarande tills nya launchern är godkänd.
+
+### Lokala Steam-spel
+
+Installerade spel läses från Steams lokala manifest vid start och när du öppnar
+Spel → Steam. Befintliga manuella Steam-rutor och deras startinställningar
+behålls. Steam-klientens lokala logotyp används om den finns. Spel måste öppna ett
+identifierbart X11-fönster för att Guide ska kunna ta dig tillbaka.
+
+Markera ett spel och tryck X (tangentbord: P) för att välja kontrollprofil.
+Spelets val sparas per Steam AppID i `steam-controller-profiles.json` bredvid
+konfigurationen. Media Hub kan växla till en namngiven AntiMicroX-profil när
+spelet har en egen tom AutoProfile-regel; annars behålls befintliga
+AntiMicroX-inställningar. Den tillfälliga mappningen använder inte Guide och
+återställs när spelet avslutas. Inga AntiMicroX-regler skapas automatiskt.

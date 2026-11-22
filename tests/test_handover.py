@@ -110,6 +110,27 @@ def test_class_matches():
     assert not class_matches("Navigator firefox_firefox", None)
 
 
+def test_steam_handover_matches_app_id_and_rejects_other_game(qt_app, tmp_path):
+    from Xlib import X, Xatom, display
+
+    connection = display.Display()
+    window = connection.screen().root.create_window(0, 0, 30, 30, 0, X.CopyFromParent)
+    try:
+        window.set_wm_class('Other', 'Other')
+        window.change_property(connection.intern_atom('_STEAM_GAME'), Xatom.CARDINAL, 32, [413150])
+        connection.sync()
+        handover = Handover(make_config(tmp_path, [sys.executable]))
+        assert handover._matches_window(window, 'Stardew Valley', '413150')
+        assert not handover._matches_window(window, 'Other', '427520')
+        window.delete_property(connection.intern_atom('_STEAM_GAME'))
+        window.set_wm_class('steam_app_413150', 'Other')
+        connection.sync()
+        assert handover._matches_window(window, 'Stardew Valley', '413150')
+    finally:
+        window.destroy()
+        connection.close()
+
+
 def test_handover_hides_and_restores_launcher(qt_app, tmp_path):
     config = make_config(tmp_path, [sys.executable, "-c", FAKE_WINDOW])
     handover = Handover(config)

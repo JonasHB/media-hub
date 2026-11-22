@@ -35,11 +35,30 @@ Window {
     readonly property color accent: (section && section.theme) || currentCategory.theme || "#4d9dff"
     readonly property var ssCfg: settings.screensaver || ({})
     property var photoList: []
-    readonly property var footerHints: gamepad.connected
+    readonly property var basicFooterHints: gamepad.connected
         ? ["\u2190 \u2192  Bläddra", "LB / RB  Kategori", "A  Starta", "Y  Bildspel",
            section ? "B  Tillbaka" : "Start  Meny"]
         : ["\u2190 \u2192  Bläddra", "PgUp / PgDn  Kategori", "Enter  Starta",
            "S  Bildspel", section ? "Esc  Tillbaka" : "Esc  Meny"]
+
+    readonly property var selectedTile: currentItems[tileIndexFor()] || ({})
+    readonly property var footerHints: selectedTile.steam_app_id
+        ? basicFooterHints.concat([gamepad.connected ? "X  Kontrollprofil" : "P  Kontrollprofil"])
+        : basicFooterHints
+
+    function openProfiles() {
+        if (launcher.busy || slideshow.active || systemMenu.visible || profileMenu.visible
+                || !selectedTile.steam_app_id)
+            return
+        noteActivity()
+        profileMenu.itemId = selectedTile.id
+        var choices = launcher.controllerProfiles(selectedTile.id)
+        if (!choices.length)
+            return
+        profileMenu.entries = choices
+        var index = choices.findIndex(function(entry) { return entry.selected })
+        profileMenu.open(Math.max(0, index))
+    }
 
     function noteActivity() {
         if (idleTimer.running)
@@ -161,7 +180,8 @@ Window {
         if (idx >= 0 && idx < items.length) {
             var item = items[idx]
             if (item.section) {
-                section = item.section
+                var updated = item.section.id === "steam" ? launcher.refreshSteamSection() : ""
+                section = updated ? JSON.parse(updated) : item.section
                 centerSelection()
             } else if (item.back) {
                 goBack()
@@ -197,6 +217,9 @@ Window {
             root.noteActivity()
             if (event.key === Qt.Key_S && !slideshow.active) {
                 root.startSlideshow()
+                event.accepted = true
+            } else if (event.key === Qt.Key_P) {
+                root.openProfiles()
                 event.accepted = true
             } else if (event.key === Qt.Key_PageUp) {
                 root.changeCategory(-1)
@@ -450,25 +473,30 @@ Window {
     Connections {
         target: gamepad
         function onNavigate(direction) {
+            if (profileMenu.visible) { profileMenu.move(direction); return }
             if (systemMenu.visible) { systemMenu.move(direction); return }
             if (slideshow.active) { slideshow.step(direction, false); return }
             root.moveTile(direction)
         }
         function onCategoryStep(direction) {
+            if (profileMenu.visible) { profileMenu.move(direction); return }
             if (systemMenu.visible) { systemMenu.move(direction); return }
             if (slideshow.active) { slideshow.step(direction, false); return }
             root.changeCategory(direction)
         }
         function onVerticalStep(direction) {
+            if (profileMenu.visible) { profileMenu.move(direction); return }
             if (systemMenu.visible) { systemMenu.move(direction); return }
             if (slideshow.active) slideshow.adjustDuration(-direction)
         }
         function onSelectPressed() {
+            if (profileMenu.visible) { profileMenu.activate(); return }
             if (systemMenu.visible) { systemMenu.activate(); return }
             if (slideshow.active) { slideshow.togglePause(); return }
             root.activate()
         }
         function onSystemMenuPressed() {
+            if (profileMenu.visible) { profileMenu.close(); return }
             if (slideshow.active) { slideshow.wake(); return }
             if (systemMenu.visible)
                 systemMenu.close()
@@ -476,13 +504,19 @@ Window {
                 systemMenu.open()
         }
         function onScreensaverPressed() {
+            if (profileMenu.visible) { profileMenu.close(); return }
             if (slideshow.active) slideshow.wake()
             else root.startSlideshow()
+        }
+        function onProfilesPressed() {
+            if (profileMenu.visible) profileMenu.close()
+            else root.openProfiles()
         }
         function onGuidePressed() {
             if (slideshow.active) slideshow.wake()
         }
         function onBackPressed() {
+            if (profileMenu.visible) { profileMenu.close(); return }
             if (systemMenu.visible) { systemMenu.close(); return }
             root.goBack()
         }
@@ -529,6 +563,29 @@ Window {
         }
     }
 
+    SystemMenu {
+        id: profileMenu
+        objectName: "controllerProfileMenu"
+        anchors.fill: parent
+        s: root.s
+        accent: root.accent
+        animMs: root.animMs
+        heading: "Kontrollprofil: " + (root.selectedTile.title || "")
+        entries: []
+        property string itemId: ""
+        onActionChosen: function(profile) {
+            if (launcher.setControllerProfile(itemId, profile))
+                toast.show("Kontrollprofil sparad")
+            else
+                toast.show("Kunde inte spara kontrollprofilen")
+            close()
+        }
+        onClosed: {
+            root.noteActivity()
+            keyLayer.forceActiveFocus()
+        }
+    }
+
     Timer {
         id: idleTimer
         interval: Math.max(1000, (root.ssCfg.idle_seconds === undefined
@@ -539,6 +596,7 @@ Window {
             && !launcher.busy
             && !slideshow.active
             && !systemMenu.visible
+            && !profileMenu.visible
         onTriggered: root.startSlideshow(true)
     }
 

@@ -11,7 +11,7 @@ FocusScope {
 
     signal actionChosen(string action)
 
-    readonly property var entries: [
+    property var entries: [
         { action: "resume", title: "Fortsätt", subtitle: "Tillbaka till menyn" },
         { action: "suspend", title: "Viloläge", subtitle: "Datorn går ner i viloläge" },
         { action: "reboot", title: "Starta om", subtitle: "Startar om datorn" },
@@ -19,8 +19,11 @@ FocusScope {
         { action: "quit", title: "Stäng launcher", subtitle: "Avsluta Media Hub" }
     ]
 
-    function open() {
-        index = 0
+    readonly property int firstEntry: Math.max(0, Math.min(index - 2, entries.length - 5))
+    property string heading: ""
+
+    function open(initialIndex) {
+        index = initialIndex === undefined ? 0 : initialIndex
         visible = true
         forceActiveFocus()
     }
@@ -81,18 +84,27 @@ FocusScope {
             anchors.margins: 28 * menu.s
             spacing: 8 * menu.s
 
+            Text {
+                visible: menu.heading.length > 0
+                text: menu.heading
+                color: "#eaf2ff"
+                font.bold: true
+                font.pixelSize: 22 * menu.s
+            }
+
             Repeater {
-                model: menu.entries
+                model: menu.entries.slice(menu.firstEntry, menu.firstEntry + 5)
                 delegate: Item {
                     required property var modelData
                     required property int index
+                    readonly property int entryIndex: menu.firstEntry + index
                     width: content.width
                     height: 74 * menu.s
 
                     Rectangle {
                         anchors.fill: parent
                         radius: 12 * menu.s
-                        color: index === menu.index ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
+                        color: entryIndex === menu.index ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
                     }
 
                     Rectangle {
@@ -102,7 +114,12 @@ FocusScope {
                         height: 40 * menu.s
                         radius: 2 * menu.s
                         color: menu.accent
-                        opacity: index === menu.index ? 1 : 0
+                        opacity: entryIndex === menu.index ? 1 : 0
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: { menu.index = parent.entryIndex; menu.activate() }
                     }
 
                     Column {
@@ -113,9 +130,9 @@ FocusScope {
 
                         Text {
                             text: modelData.title
-                            color: index === menu.index ? "#ffffff" : "#c6d2e2"
+                            color: entryIndex === menu.index ? "#ffffff" : "#c6d2e2"
                             font.pixelSize: 26 * menu.s
-                            font.bold: index === menu.index
+                            font.bold: entryIndex === menu.index
                         }
 
                         Text {

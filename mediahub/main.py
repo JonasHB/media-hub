@@ -4,6 +4,7 @@ import argparse
 import json
 import logging
 import os
+import shutil
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
@@ -19,6 +20,8 @@ from .gamepad import Gamepad
 from .handover import Handover
 from .library import apply_library, report_missing_icons
 from .photos import PhotoLibrary
+from .steam import apply_steam_library, scan_steam_games
+from .steam_profiles import SteamProfiles
 from .system import SystemActions
 
 APP_ROOT = Path(__file__).resolve().parent.parent
@@ -129,6 +132,9 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     library_warnings = apply_library(config)
+    steam = shutil.which("steam")
+    if steam:
+        apply_steam_library(config, scan_steam_games(), steam)
 
     screensaver = config["settings"]["screensaver"]
 
@@ -166,7 +172,11 @@ def main(argv: list[str] | None = None) -> int:
         "screenshotPath", str(args.screenshot) if args.screenshot is not None else ""
     )
     context.setContextProperty("screenshotDelay", args.screenshot_delay)
-    handover = Handover(config, engine)
+    steam_profiles = SteamProfiles()
+    handover = Handover(config, engine, steam_profiles=steam_profiles,
+                        selections_path=config_path.with_name("steam-controller-profiles.json"),
+                        steam_executable=steam)
+    app.aboutToQuit.connect(steam_profiles.restore)
     context.setContextProperty("launcher", handover)
     system_actions = SystemActions(app)
     context.setContextProperty("systemActions", system_actions)

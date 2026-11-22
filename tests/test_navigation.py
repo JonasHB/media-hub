@@ -28,6 +28,7 @@ from mediahub.gamepad import Gamepad
 from mediahub.handover import Handover
 from mediahub.library import apply_library
 from mediahub.system import SystemActions
+from mediahub.steam import SteamGame, apply_steam_library
 
 config = load_config('config/example.json')
 config['categories'][1]['subcategories'].extend([
@@ -35,6 +36,15 @@ config['categories'][1]['subcategories'].extend([
     {'id': 'other', 'title': 'Other', 'items': []},
     {'id': 'steam', 'title': 'Steam', 'items': []},
 ])
+apply_steam_library(config, [SteamGame('413150', 'Stardew Valley')], 'steam')
+
+class Profiles:
+    def supports(self, window_class):
+        return window_class == 'Stardew Valley'
+    def choices(self):
+        return [('mouse.gamecontroller.amgp', 'Musprofil')]
+
+selections = Path(sys.argv[1]) / 'selections.json'
 config['emulators'][0]['rom_dirs'] = [sys.argv[1]]
 assert apply_library(config) == []
 app = QGuiApplication([])
@@ -54,7 +64,7 @@ for name in ('first', 'second'):
 config['settings']['screensaver'].update(enabled=True, order='sequential', photo_seconds=10, folders=[sys.argv[1]])
 values = dict(configJson=json.dumps(config), startWindowed=True, windowWidth=800,
               windowHeight=450, photoLibrary=PhotoLibrary([sys.argv[1]], engine), screenshotPath='', screenshotDelay=0,
-              launcher=Handover(config, engine), systemActions=SystemActions(app), gamepad=gamepad)
+              launcher=Handover(config, engine, steam_profiles=Profiles(), selections_path=selections), systemActions=SystemActions(app), gamepad=gamepad)
 for key, value in values.items():
     engine.rootContext().setContextProperty(key, value)
 engine.load(QUrl.fromLocalFile('qml/Main.qml'))
@@ -108,6 +118,11 @@ QTest.keyClick(window, Qt.Key_Return)
 assert window.property('sectionTitle') == 'Nintendo 8-bit'
 QTest.keyClick(window, Qt.Key_Escape)
 assert window.property('sectionTitle') == ''
+QTest.keyClick(window, Qt.Key_Right)
+QTest.keyClick(window, Qt.Key_Right)
+QTest.keyClick(window, Qt.Key_Right)
+QTest.keyClick(window, Qt.Key_Return)
+assert window.property('sectionTitle') == 'Steam'
 slideshow = next(child for child in window.contentItem().childItems()
                  if child.metaObject().indexOfProperty('currentName') >= 0)
 
@@ -122,6 +137,19 @@ def tilt(axis, direction):
     gamepad._poll()
     assert sdl2.SDL_JoystickSetVirtualAxis(joystick, axis, 0) == 0
     gamepad._poll()
+
+press(sdl2.SDL_CONTROLLER_BUTTON_X)
+menu = window.findChild(type(window.contentItem()), 'controllerProfileMenu')
+assert menu is not None and menu.isVisible()
+press(sdl2.SDL_CONTROLLER_BUTTON_DPAD_DOWN)
+press(sdl2.SDL_CONTROLLER_BUTTON_A)
+assert not menu.isVisible()
+assert json.loads(selections.read_text()) == {'413150': 'mouse.gamecontroller.amgp'}
+press(sdl2.SDL_CONTROLLER_BUTTON_X)
+assert menu.property('index') == 1
+press(sdl2.SDL_CONTROLLER_BUTTON_DPAD_UP)
+press(sdl2.SDL_CONTROLLER_BUTTON_A)
+assert json.loads(selections.read_text()) == {}
 
 assert QImage(str(Path(sys.argv[1]) / 'first.png')).save(str(Path(sys.argv[1]) / 'third.png'))
 press(sdl2.SDL_CONTROLLER_BUTTON_Y)
