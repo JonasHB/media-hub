@@ -1,0 +1,120 @@
+[
+  {
+    "library_path": "nes/Chip 'n Dale - Rescue Rangers (USA).nes",
+    "historical_rom_source": "Planet Emulation",
+    "logo_path": "nes/Chip 'n Dale - Rescue Rangers (USA).png",
+    "logo_sha256": "72674b9ada2763ac60713e2bd50affef8f089374a19ea2ef0d98bd7ab97afe04"
+  },
+  {
+    "library_path": "nes/Duck Tales (U).nes",
+    "historical_rom_source": "unknown",
+    "logo_path": "nes/Duck Tales (U).png",
+    "logo_sha256": "2c0650c31f89f32da84ca8d8d707fe511c1c19b49d29cfaa0d7c8b8b8492bc43"
+  },
+  {
+    "library_path": "nes/Legend of Zelda, The (U) (PRG1) [!].nes",
+    "historical_rom_source": "unknown",
+    "logo_path": "nes/Legend of Zelda, The (U) (PRG1) [!].png",
+    "logo_sha256": "4639cfa93f99a0e67d91e0359d1f3ddbe9ba99eee2febe8caba7f5e0c41c225d"
+  },
+  {
+    "library_path": "nes/Nintendo World Cup (USA).nes",
+    "historical_rom_source": "Planet Emulation",
+    "logo_path": "nes/Nintendo World Cup (USA).png",
+    "logo_sha256": "a34a7580ebd6e1ff3370f030c4bd2c8d3234c671d4c3b2c515acdb1d792bd36e"
+  },
+  {
+    "library_path": "nes/Snake Rattle n Roll (USA).nes",
+    "historical_rom_source": "Planet Emulation",
+    "logo_path": "nes/Snake Rattle n Roll (USA).png",
+    "logo_sha256": "f5cd11d776e02a6c3a8337fea8ef1c60a0881ead195d7791a0a66ea4d901786c"
+  },
+  {
+    "library_path": "nes/Super Mario Bros. (Europe).nes",
+    "historical_rom_source": "unknown",
+    "logo_path": "nes/Super Mario Bros. (Europe).png",
+    "logo_sha256": "ef06fc69b0ef8a2a3413d6c8b886bb92a597ed295be752e5eb582f327817e7b5"
+  },
+  {
+    "library_path": "nes/Super Mario Bros. 3 (U) (PRG1) [!].nes",
+    "historical_rom_source": "unknown",
+    "logo_path": "nes/Super Mario Bros. 3 (U) (PRG1) [!].png",
+    "logo_sha256": "62d4c80fe02d78990c74c34f50ed09d52b0fc8035b605d0c88dc13709dc0df99"
+  },
+  {
+    "library_path": "snes/Aladdin (USA).smc",
+    "historical_rom_source": "unknown",
+    "logo_path": "snes/Aladdin (USA).png",
+    "logo_sha256": "0b6020418ebefc29acf522d56bcf456073d771a6a00f666349d6af89df5312ff"
+  },
+  {
+    "library_path": "snes/Harvest Moon (USA).sfc",
+    "historical_rom_source": "Planet Emulation",
+    "logo_path": "snes/Harvest Moon (USA).png",
+    "logo_sha256": "8dba916fa7365ef654bbd24f1ce99d50932480083fcedad801f512d31d5b4cd5"
+  },
+  {
+    "library_path": "snes/Legend of Zelda, The - A Link to the Past (USA).sfc",
+    "historical_rom_source": "Planet Emulation",
+    "logo_path": "snes/Legend of Zelda, The - A Link to the Past (USA).png",
+    "logo_sha256": "b72bfca98a9848296a0480a9c2d0e15abe738da9818352d5a6b445e3e40e9023"
+  },
+  {
+    "library_path": "snes/Lemmings (USA).sfc",
+    "historical_rom_source": "Planet Emulation",
+    "logo_path": "snes/Lemmings (USA).png",
+    "logo_sha256": "474e05cbd6232f27c15de7f04c0248c303f24c595f48c4bd142e11bcfdf92bdb"
+  },
+  {
+    "library_path": "snes/Lemmings 2 - The Tribes (USA).sfc",
+    "historical_rom_source": "Planet Emulation",
+    "logo_path": "snes/Lemmings 2 - The Tribes (USA).png",
+    "logo_sha256": "14843ecaef11aa4e0bf5cc7c5e66db3637196c2867a1b35dd23e5eedb6064a84"
+  },
+  {
+    "library_path": "snes/Prince of Persia (Europe).sfc",
+    "historical_rom_source": "Planet Emulation",
+    "logo_path": "snes/Prince of Persia (Europe).png",
+    "logo_sha256": "f6f5c7a3cc54cb3fc41ffa70e55da6518add93b9643eb59efb4db2cc82b8dd1a"
+  },
+  {
+    "library_path": "snes/Super Mario All-Stars (Europe).sfc",
+    "historical_rom_source": "unknown",
+    "logo_path": "snes/Super Mario All-Stars (Europe).png",
+    "logo_sha256": "b84631e1e622d4f117e090fdf1c7bb6648a2c2d861c4e3b17a1fcb08a3ef5c0a"
+  },
+  {
+    "library_path": "snes/Super Mario World (Europe) (Rev 1).sfc",
+    "historical_rom_source": "Planet Emulation",
+    "logo_path": "snes/Super Mario World (Europe) (Rev 1).png",
+    "logo_sha256": "f8f731b5e95e19ec97a806ad016106e8966bbdfabc9118256ee4bb72579a2aaf"
+  },
+  {
+    "library_path": "wii/MarioKartGC.iso",
+    "historical_rom_source": "unknown",
+    "logo_path": "wii/MarioKartGC.png",
+    "logo_sha256": "1ad2bcc7f7f4ed417dc64f24f4f3ef778a652d01682ae7db5d13de600a8aa634",
+    "logo_source": "https://images.launchbox-app.com/520b0efe-4cea-4993-a56f-f7f0974563e1.png"
+  },
+  {
+    "library_path": "wii/Super Smash Bros Melee.iso",
+    "historical_rom_source": "unknown",
+    "logo_path": "wii/Super Smash Bros Melee.png",
+    "logo_sha256": "9dfae57af304bb56a01fdccc4cb1c03fb75c0a7736b08dfcfc2c0cf4ce0068dc",
+    "logo_source": "https://images.launchbox-app.com/c35059cd-f8c5-473d-bac5-7fdf40028ebc.png"
+  },
+  {
+    "library_path": "wii/Zelda-The wind waker.iso",
+    "historical_rom_source": "unknown",
+    "logo_path": "wii/Zelda-The wind waker.png",
+    "logo_sha256": "5a98d3ce50575630056e2d99c2d03d8fcc86d45e62eca133e368a8655d87ce64",
+    "logo_source": "https://images.launchbox-app.com/3afd4b4d-6af1-4360-86c4-672a5a49baa2.png"
+  },
+  {
+    "library_path": "wii/m3-burn2.iso",
+    "historical_rom_source": "unknown",
+    "logo_path": "wii/m3-burn2.png",
+    "logo_sha256": "195b96a6a9dd5619378639125864cdf97ad75559c1422e1a71604c4543d56265",
+    "logo_source": "https://images.launchbox-app.com/7ef5597c-8405-4f71-835b-06d7082b1e03.png"
+  }
+]

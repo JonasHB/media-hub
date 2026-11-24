@@ -1,0 +1,283 @@
+{
+  "version": 1,
+  "settings": {
+    "fps": 60,
+    "animations": true,
+    "language": "sv",
+    "exit_combo": [
+      "guide"
+    ],
+    "screensaver": {
+      "enabled": true,
+      "idle_seconds": 120,
+      "photo_seconds": 6,
+      "transition_ms": 1200,
+      "ken_burns": true,
+      "order": "random",
+      "folders": [
+        "~/Pictures"
+      ],
+      "show_filename": false
+    }
+  },
+  "categories": [
+    {
+      "id": "streaming",
+      "title": "Streaming",
+      "items": [
+        {
+          "id": "youtube",
+          "title": "YouTube",
+          "icon": "icons/youtube.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.youtube.com/"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000,
+            "fullscreen": true
+          }
+        },
+        {
+          "id": "netflix",
+          "title": "Netflix",
+          "icon": "icons/netflix.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.netflix.com/browse"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000,
+            "fullscreen": true
+          }
+        },
+        {
+          "id": "disney-plus",
+          "title": "Disney+",
+          "icon": "icons/disney-plus.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.disneyplus.com/"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000,
+            "fullscreen": true
+          }
+        },
+        {
+          "id": "prime-video",
+          "title": "Prime Video",
+          "icon": "icons/prime-video.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.primevideo.com/"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000,
+            "fullscreen": true
+          }
+        },
+        {
+          "id": "svt-play",
+          "title": "SVT Play",
+          "icon": "icons/svt-play.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.svtplay.se/"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000,
+            "fullscreen": true
+          }
+        },
+        {
+          "id": "cineasterna",
+          "title": "Cineasterna",
+          "icon": "icons/cineasterna.png",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.cineasterna.com/sv/library/68/discover"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000,
+            "fullscreen": true
+          }
+        }
+      ],
+      "theme": "#4d9dff"
+    },
+    {
+      "id": "games",
+      "title": "Spel",
+      "items": [],
+      "theme": "#f2a54a",
+      "subcategories": [
+        {
+          "id": "snes",
+          "title": "Super Nintendo"
+        },
+        {
+          "id": "nes",
+          "title": "Nintendo 8-bit"
+        },
+        {
+          "id": "wii",
+          "title": "Wii"
+        },
+        {
+          "id": "steam",
+          "title": "Steam",
+          "items": [
+            {
+              "id": "steam-big-picture",
+              "title": "Steam Big Picture",
+              "launch": {
+                "command": [
+                  "steam",
+                  "-bigpicture"
+                ]
+              },
+              "handover": {
+                "type": "window",
+                "window_class": "Steam",
+                "start_timeout_ms": 30000
+              }
+            },
+            {
+              "id": "stardew-valley",
+              "title": "Stardew Valley",
+              "launch": {
+                "command": [
+                  "/snap/bin/steam",
+                  "-applaunch",
+                  "413150"
+                ]
+              },
+              "handover": {
+                "type": "window",
+                "window_class": "Stardew Valley",
+                "start_timeout_ms": 60000,
+                "detached_launch": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "emulators": [
+    {
+      "id": "snes9x",
+      "title": "Super Nintendo",
+      "category": "snes",
+      "rom_dirs": [
+        "@HOME@/snes"
+      ],
+      "extensions": [
+        ".sfc",
+        ".smc"
+      ],
+      "command": [
+        "flatpak",
+        "run",
+        "--filesystem=@HOME@/snes",
+        "com.snes9x.Snes9x",
+        "{rom}"
+      ],
+      "handover": {
+        "type": "window",
+        "window_class": "snes9x-gtk Snes9x-gtk",
+        "profile": "snes9x",
+        "start_timeout_ms": 15000,
+        "close_strategy": "graceful",
+        "fullscreen": true
+      }
+    },
+    {
+      "id": "nestopia",
+      "title": "Nintendo 8-bit",
+      "category": "nes",
+      "rom_dirs": [
+        "@HOME@/nes"
+      ],
+      "extensions": [
+        ".nes"
+      ],
+      "command": [
+        "flatpak",
+        "run",
+        "ca._0ldsk00l.Nestopia",
+        "{rom}"
+      ],
+      "handover": {
+        "type": "window",
+        "window_class": "nestopia Nestopia",
+        "fullscreen": true,
+        "close_strategy": "graceful"
+      }
+    },
+    {
+      "id": "dolphin",
+      "title": "Dolphin",
+      "category": "wii",
+      "rom_dirs": [
+        "@HOME@/wii"
+      ],
+      "extensions": [
+        ".rvz",
+        ".iso",
+        ".wbfs"
+      ],
+      "command": [
+        "flatpak",
+        "run",
+        "org.DolphinEmu.dolphin-emu",
+        "--batch",
+        "--exec",
+        "{rom}"
+      ],
+      "handover": {
+        "type": "window",
+        "window_class": "dolphin-emu dolphin-emu",
+        "fullscreen": false,
+        "close_strategy": "graceful"
+      }
+    }
+  ]
+}

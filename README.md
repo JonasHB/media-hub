@@ -4,6 +4,11 @@ Lokal HTPC-launcher för Linux, byggd med Python + QML (Qt 6) och SDL2.
 Ersätter Flex Launcher: helskärmsgränssnitt, Xbox 360-navigering, handover till
 Firefox/spel och ett konfigurationsdrivet app- och ROM-bibliotek.
 
+## Flytta till en ny HTPC
+
+Se [migreringsguiden](docs/migration/README.md) för portabla konfigurationsmallar,
+Xbox-profiler, lokalt OSK-bygge, ROM- och logotypinventering samt Hermes-skills.
+
 ## Status
 
 MVP enligt briefens prioriterade leverans steg 1–4:

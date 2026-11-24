@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=AntiMicroX
+Exec=antimicrox --tray --profile @HOME@/.config/antimicrox/firefox.gamecontroller.amgp
+Terminal=false
+X-MATE-Autostart-enabled=true

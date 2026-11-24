@@ -1,0 +1,612 @@
+diff --git a/app.go b/app.go
+index b4f3aa8..f2b0030 100644
+--- a/app.go
++++ b/app.go
+@@ -2,10 +2,12 @@ package main //nolint:revive // main package needs no doc comment
+ 
+ import (
+ 	"log"
++	"net"
+ 	"os"
+-	"strconv"
++	"path/filepath"
+ 	"runtime"
+ 	"sort"
++	"strconv"
+ 	"sync"
+ 	"time"
+ )
+@@ -26,22 +28,23 @@ type App struct {
+ 	visible       bool
+ 	daemon        bool
+ 	togglePending bool
++	returnPending bool
+ 	lock          sync.Mutex
+-	themeIdx int
+-	posTop   bool // true = keyboard at top of screen
+-	window   *Window
+-	mon      MonitorRect // raw monitor bounds
+-	posArea  MonitorRect // positioning area (workarea on X11, same as mon on Wayland)
+-	winH     int32
+-	winX     int32 // stored for re-apply after show
+-	winY     int32
+-	margin   int32
++	themeIdx      int
++	posTop        bool // true = keyboard at top of screen
++	window        *Window
++	mon           MonitorRect // raw monitor bounds
++	posArea       MonitorRect // positioning area (workarea on X11, same as mon on Wayland)
++	winH          int32
++	winX          int32 // stored for re-apply after show
++	winY          int32
++	margin        int32
+ 
+ 	// Key repeat state
+-	repeatAction   ActionType // action to repeat (ActionNone = inactive)
+-	repeatStart    time.Time  // when key was first pressed
+-	repeatLast     time.Time  // when last repeat fired
+-	repeatInitial  bool       // true = still in initial delay phase
++	repeatAction  ActionType // action to repeat (ActionNone = inactive)
++	repeatStart   time.Time  // when key was first pressed
++	repeatLast    time.Time  // when last repeat fired
++	repeatInitial bool       // true = still in initial delay phase
+ 
+ 	reconnectLast time.Time // cooldown for gamepad reconnection attempts
+ }
+@@ -61,6 +64,9 @@ func (app *App) Run() error {
+ 	cfg := app.config
+ 	ValidateConfig(&cfg)
+ 	layout := LayoutQWERTY
++	if os.Getenv("GAMEPAD_OSK_LAYOUT") == "se" {
++		layout = swedishLayout()
++	}
+ 	theme := GetTheme(cfg.Theme.Name)
+ 
+ 	// Build dynamic glyph map from button config
+@@ -356,6 +362,10 @@ func (app *App) Run() error {
+ 					}
+ 					RestoreFocus()
+ 				}
++				if app.returnPending {
++					app.returnPending = false
++					requestMediaHubReturn()
++				}
+ 			}
+ 		}
+ 		app.lock.Unlock()
+@@ -461,9 +471,31 @@ func (app *App) Run() error {
+ 	return nil
+ }
+ 
++func requestMediaHubReturn() {
++	runtime := os.Getenv("XDG_RUNTIME_DIR")
++	if runtime == "" {
++		return
++	}
++	c, err := net.DialTimeout("unix", filepath.Join(runtime, "media-hub-return.sock"), 100*time.Millisecond)
++	if err != nil {
++		Debugf("Media Hub return unavailable: %v", err)
++		return
++	}
++	_ = c.Close()
++}
++
+ func (app *App) handleAction(a Action, kb *KeyboardState, inj *Injector, rend *Renderer) {
++	if a.Type == ActionGuideReturn {
++		if app.visible {
++			app.lock.Lock()
++			app.returnPending = true
++			app.togglePending = true
++			app.lock.Unlock()
++		}
++		return
++	}
+ 	// Toggle combo works even when hidden (it's the show/hide mechanism)
+-	if a.Type == ActionToggle {
++	if a.Type == ActionToggle || (a.Type == ActionSelectToggle && (app.visible || SelectOverlayAllowed())) {
+ 		app.lock.Lock()
+ 		app.togglePending = true
+ 		app.lock.Unlock()
+diff --git a/buttons.go b/buttons.go
+index 13f4bc9..8db7f45 100644
+--- a/buttons.go
++++ b/buttons.go
+@@ -36,16 +36,16 @@ func buttonTable(swapXY bool) map[string]ButtonInfo {
+ 		xBtn, yBtn = yBtn, xBtn
+ 	}
+ 	return map[string]ButtonInfo{
+-		"a":      {EvdevBtn: BTN_SOUTH, Glyph: "\u21a7"},  // face bottom
+-		"b":      {EvdevBtn: BTN_EAST, Glyph: "\u21a6"},   // face right
+-		"x":      {EvdevBtn: xBtn, Glyph: "\u21a4"},       // face left
+-		"y":      {EvdevBtn: yBtn, Glyph: "\u21a5"},       // face top
+-		"lb":     {EvdevBtn: BTN_TL, Glyph: "\u2198"},     // left shoulder
+-		"rb":     {EvdevBtn: BTN_TR, Glyph: "\u2199"},     // right shoulder
+-		"l3":     {EvdevBtn: BTN_THUMBL, Glyph: "\u21ba"}, // left stick click
+-		"r3":     {EvdevBtn: BTN_THUMBR, Glyph: "\u21bb"}, // right stick click
+-		"start":  {EvdevBtn: 0x13b, Glyph: "\u21f8"},      // BTN_START
+-		"select": {EvdevBtn: 0x13a, Glyph: "\u21f7"},      // BTN_SELECT
++		"a":      {EvdevBtn: BTN_SOUTH, Glyph: "\u21a7"},                                // face bottom
++		"b":      {EvdevBtn: BTN_EAST, Glyph: "\u21a6"},                                 // face right
++		"x":      {EvdevBtn: xBtn, Glyph: "\u21a4"},                                     // face left
++		"y":      {EvdevBtn: yBtn, Glyph: "\u21a5"},                                     // face top
++		"lb":     {EvdevBtn: BTN_TL, Glyph: "\u2198"},                                   // left shoulder
++		"rb":     {EvdevBtn: BTN_TR, Glyph: "\u2199"},                                   // right shoulder
++		"l3":     {EvdevBtn: BTN_THUMBL, Glyph: "\u21ba"},                               // left stick click
++		"r3":     {EvdevBtn: BTN_THUMBR, Glyph: "\u21bb"},                               // right stick click
++		"start":  {EvdevBtn: 0x13b, Glyph: "\u21f8"},                                    // BTN_START
++		"select": {EvdevBtn: 0x13a, Glyph: "\u21f7"},                                    // BTN_SELECT
+ 		"lt":     {EvdevBtn: BTN_TL2, EvdevAxis: ABS_Z, IsAxis: true, Glyph: "\u2196"},  // left trigger (axis on Xbox/DS, button on Switch)
+ 		"rt":     {EvdevBtn: BTN_TR2, EvdevAxis: ABS_RZ, IsAxis: true, Glyph: "\u2197"}, // right trigger (axis on Xbox/DS, button on Switch)
+ 	}
+@@ -53,10 +53,10 @@ func buttonTable(swapXY bool) map[string]ButtonInfo {
+ 
+ // ActionMap maps evdev codes to actions, built from config at startup.
+ type ActionMap struct {
+-	BtnPress     map[uint16]ActionType // EV_KEY press actions
+-	BtnRelease   map[uint16]ActionType // EV_KEY release actions (for hold buttons like mouse)
+-	AxisActions  map[uint16]ActionType // ABS axis actions (triggers)
+-	AxisRelease  map[uint16]ActionType // ABS axis release actions (for repeat stop)
++	BtnPress    map[uint16]ActionType // EV_KEY press actions
++	BtnRelease  map[uint16]ActionType // EV_KEY release actions (for hold buttons like mouse)
++	AxisActions map[uint16]ActionType // ABS axis actions (triggers)
++	AxisRelease map[uint16]ActionType // ABS axis release actions (for repeat stop)
+ }
+ 
+ func BuildActionMap(cfg GamepadConfig) ActionMap {
+@@ -84,8 +84,12 @@ func BuildActionMap(cfg GamepadConfig) ActionMap {
+ 	}
+ 
+ 	b := cfg.Buttons
+-	setBtn(b.Press, ActionPress)    // special: handled as press_start/press
+-	setBtn(b.Close, ActionClose)
++	setBtn(b.Press, ActionPress) // special: handled as press_start/press
++	if b.Close == "select" {
++		setBtn(b.Close, ActionSelectToggle)
++	} else {
++		setBtn(b.Close, ActionClose)
++	}
+ 	setBtn(b.Backspace, ActionBackspace)
+ 	setBtn(b.Space, ActionSpace)
+ 	setBtn(b.Shift, ActionShiftOn)
+@@ -104,7 +108,10 @@ func BuildActionMap(cfg GamepadConfig) ActionMap {
+ 	}
+ 
+ 	// Repeatable keys: need release to stop key repeat (buttons and axes)
+-	for _, pair := range []struct{ name string; action ActionType }{
++	for _, pair := range []struct {
++		name   string
++		action ActionType
++	}{
+ 		{b.Backspace, ActionBackspaceRelease},
+ 		{b.Space, ActionSpaceRelease},
+ 		{b.Enter, ActionEnterRelease},
+@@ -151,7 +158,12 @@ func BuildKeyGlyphs(cfg GamepadConfig) map[int]string {
+ 		{KEY_ENTER, b.Enter},
+ 		{KEY_LEFTSHIFT, b.Shift},
+ 		{KEY_RIGHTSHIFT, b.Shift},
+-		{KEY_CAPSLOCK, func() string { if cfg.MouseStick == "left" { return "r3" }; return "l3" }()},
++		{KEY_CAPSLOCK, func() string {
++			if cfg.MouseStick == "left" {
++				return "r3"
++			}
++			return "l3"
++		}()},
+ 	}
+ 
+ 	for _, m := range mappings {
+@@ -184,10 +196,10 @@ func comboButtonTable() map[string]ComboButton {
+ 		"guide":      {Name: "guide", BtnCodes: []uint16{0x13c}},  // BTN_MODE
+ 		"lt":         {Name: "lt", BtnCodes: []uint16{BTN_TL2}, AxisCode: ABS_Z, AxisVal: 1},
+ 		"rt":         {Name: "rt", BtnCodes: []uint16{BTN_TR2}, AxisCode: ABS_RZ, AxisVal: 1},
+-		"dpad_up":    {Name: "dpad_up", BtnCodes: []uint16{0x220}, AxisCode: ABS_HAT0Y, AxisVal: -1},    // BTN_DPAD_UP
+-		"dpad_down":  {Name: "dpad_down", BtnCodes: []uint16{0x221}, AxisCode: ABS_HAT0Y, AxisVal: 1},   // BTN_DPAD_DOWN
+-		"dpad_left":  {Name: "dpad_left", BtnCodes: []uint16{0x222}, AxisCode: ABS_HAT0X, AxisVal: -1},  // BTN_DPAD_LEFT
+-		"dpad_right": {Name: "dpad_right", BtnCodes: []uint16{0x223}, AxisCode: ABS_HAT0X, AxisVal: 1},  // BTN_DPAD_RIGHT
++		"dpad_up":    {Name: "dpad_up", BtnCodes: []uint16{0x220}, AxisCode: ABS_HAT0Y, AxisVal: -1},   // BTN_DPAD_UP
++		"dpad_down":  {Name: "dpad_down", BtnCodes: []uint16{0x221}, AxisCode: ABS_HAT0Y, AxisVal: 1},  // BTN_DPAD_DOWN
++		"dpad_left":  {Name: "dpad_left", BtnCodes: []uint16{0x222}, AxisCode: ABS_HAT0X, AxisVal: -1}, // BTN_DPAD_LEFT
++		"dpad_right": {Name: "dpad_right", BtnCodes: []uint16{0x223}, AxisCode: ABS_HAT0X, AxisVal: 1}, // BTN_DPAD_RIGHT
+ 		// Shorthand aliases
+ 		"up":    {Name: "dpad_up", BtnCodes: []uint16{0x220}, AxisCode: ABS_HAT0Y, AxisVal: -1},
+ 		"down":  {Name: "dpad_down", BtnCodes: []uint16{0x221}, AxisCode: ABS_HAT0Y, AxisVal: 1},
+diff --git a/gamepad.go b/gamepad.go
+index 22bf7ad..75a91b4 100644
+--- a/gamepad.go
++++ b/gamepad.go
+@@ -19,19 +19,19 @@ const (
+ 	evdevEV_SYN = 0x00
+ 
+ 	// Standard evdev button codes
+-	BTN_SOUTH  = 0x130 // 304 - Xbox A, PS Cross
+-	BTN_EAST   = 0x131 // 305 - Xbox B, PS Circle
+-	BTN_NORTH  = 0x133 // 307 - Xbox Y/X (varies!)
+-	BTN_WEST   = 0x134 // 308 - Xbox X/Y (varies!)
+-	BTN_TL     = 0x136 // 310 - LB/L1
+-	BTN_TR     = 0x137 // 311 - RB/R1
+-	BTN_TL2    = 0x138 // 312 - LT/L2 (digital, Switch Pro)
+-	BTN_TR2    = 0x139 // 313 - RT/R2 (digital, Switch Pro)
+-	BTN_THUMBL    = 0x13d // 317 - L3
+-	BTN_THUMBR    = 0x13e // 318 - R3
+-	BTN_DPAD_UP   = 0x220 // 544 - DS3 D-pad (button, not axis)
+-	BTN_DPAD_DOWN = 0x221 // 545
+-	BTN_DPAD_LEFT = 0x222 // 546
++	BTN_SOUTH      = 0x130 // 304 - Xbox A, PS Cross
++	BTN_EAST       = 0x131 // 305 - Xbox B, PS Circle
++	BTN_NORTH      = 0x133 // 307 - Xbox Y/X (varies!)
++	BTN_WEST       = 0x134 // 308 - Xbox X/Y (varies!)
++	BTN_TL         = 0x136 // 310 - LB/L1
++	BTN_TR         = 0x137 // 311 - RB/R1
++	BTN_TL2        = 0x138 // 312 - LT/L2 (digital, Switch Pro)
++	BTN_TR2        = 0x139 // 313 - RT/R2 (digital, Switch Pro)
++	BTN_THUMBL     = 0x13d // 317 - L3
++	BTN_THUMBR     = 0x13e // 318 - R3
++	BTN_DPAD_UP    = 0x220 // 544 - DS3 D-pad (button, not axis)
++	BTN_DPAD_DOWN  = 0x221 // 545
++	BTN_DPAD_LEFT  = 0x222 // 546
+ 	BTN_DPAD_RIGHT = 0x223 // 547
+ 
+ 	ABS_X     = 0x00
+@@ -81,6 +81,8 @@ const (
+ 	ActionSpaceRelease
+ 	ActionEnterRelease
+ 	ActionToggle
++	ActionSelectToggle
++	ActionGuideReturn
+ )
+ 
+ type Action struct {
+@@ -106,21 +108,21 @@ func (n *NavAxis) RepeatInterval() time.Duration {
+ }
+ 
+ type GamepadReader struct {
+-	config    Config
+-	fd        *os.File
+-	grabbed   bool
+-	navX      NavAxis
+-	navY      NavAxis
+-	dpadX     NavAxis
+-	dpadY     NavAxis
+-	mouseX    float64
+-	mouseY    float64
+-	ltActive  bool
+-	rtActive  bool
++	config     Config
++	fd         *os.File
++	grabbed    bool
++	navX       NavAxis
++	navY       NavAxis
++	dpadX      NavAxis
++	dpadY      NavAxis
++	mouseX     float64
++	mouseY     float64
++	ltActive   bool
++	rtActive   bool
+ 	axisRanges map[uint16]axisRange // per-axis min/max from EVIOCGABS
+-	actionMap ActionMap
+-	pressBtn  uint16 // "press" button evdev code
+-	shiftAxis uint16 // "shift" axis for hold behavior
++	actionMap  ActionMap
++	pressBtn   uint16 // "press" button evdev code
++	shiftAxis  uint16 // "shift" axis for hold behavior
+ 	// Configurable stick axis codes
+ 	navAxisX   uint16
+ 	navAxisY   uint16
+@@ -129,12 +131,12 @@ type GamepadReader struct {
+ 	deviceName string // currently unused; stored for future logging/diagnostics
+ 
+ 	// Toggle combo state
+-	comboButtons    []ComboButton     // parsed from config at startup (nil = disabled)
+-	comboPeriodMs   int               // timing window
+-	btnHeld         map[uint16]bool   // current button press state
+-	axisState       map[uint16]int32  // current axis values (for d-pad and triggers)
+-	comboFirstPress time.Time         // when the first combo button was pressed
+-	comboFired      bool              // edge-trigger flag (prevents repeat while held)
++	comboButtons    []ComboButton    // parsed from config at startup (nil = disabled)
++	comboPeriodMs   int              // timing window
++	btnHeld         map[uint16]bool  // current button press state
++	axisState       map[uint16]int32 // current axis values (for d-pad and triggers)
++	comboFirstPress time.Time        // when the first combo button was pressed
++	comboFired      bool             // edge-trigger flag (prevents repeat while held)
+ }
+ 
+ func NewGamepadReader(config Config) *GamepadReader {
+@@ -328,8 +330,8 @@ func (gp *GamepadReader) readAxisInfo() {
+ 		var info [6]int32
+ 		_, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
+ 			gp.fd.Fd(),
+-			uintptr(eviocgabsBase+uint32(axis)),                  //nolint:gosec // G115: axis fits in uint32
+-			uintptr(unsafe.Pointer(&info[0]))) //nolint:gosec // G103: ioctl requires pointer to kernel struct
++			uintptr(eviocgabsBase+uint32(axis)), //nolint:gosec // G115: axis fits in uint32
++			uintptr(unsafe.Pointer(&info[0])))   //nolint:gosec // G103: ioctl requires pointer to kernel struct
+ 		if errno != 0 {
+ 			continue
+ 		}
+@@ -460,6 +462,10 @@ func (gp *GamepadReader) handleButton(code uint16, value int32) Action {
+ 		return toggle
+ 	}
+ 
++	if code == 0x13c && pressed && gp.config.Gamepad.Buttons.Close == "select" { // BTN_MODE (Xbox Guide)
++		return Action{Type: ActionGuideReturn}
++	}
++
+ 	if code == gp.pressBtn {
+ 		if pressed {
+ 			Debugf("Button 0x%x pressed (press btn)", code)
+@@ -732,4 +738,3 @@ func applyDeadzone(norm, dz float64) int {
+ 	}
+ 	return 0
+ }
+-
+diff --git a/layout.go b/layout.go
+index a17a32d..155ffbc 100644
+--- a/layout.go
++++ b/layout.go
+@@ -2,90 +2,91 @@ package main
+ 
+ //nolint:revive // Match Linux evdev naming
+ const (
+-	KEY_ESC       = 1
+-	KEY_1         = 2
+-	KEY_2         = 3
+-	KEY_3         = 4
+-	KEY_4         = 5
+-	KEY_5         = 6
+-	KEY_6         = 7
+-	KEY_7         = 8
+-	KEY_8         = 9
+-	KEY_9         = 10
+-	KEY_0         = 11
+-	KEY_MINUS     = 12
+-	KEY_EQUAL     = 13
+-	KEY_BACKSPACE = 14
+-	KEY_TAB       = 15
+-	KEY_Q         = 16
+-	KEY_W         = 17
+-	KEY_E         = 18
+-	KEY_R         = 19
+-	KEY_T         = 20
+-	KEY_U         = 22
+-	KEY_I         = 23
+-	KEY_O         = 24
+-	KEY_P         = 25
+-	KEY_LEFTBRACE = 26
++	KEY_ESC        = 1
++	KEY_1          = 2
++	KEY_2          = 3
++	KEY_3          = 4
++	KEY_4          = 5
++	KEY_5          = 6
++	KEY_6          = 7
++	KEY_7          = 8
++	KEY_8          = 9
++	KEY_9          = 10
++	KEY_0          = 11
++	KEY_MINUS      = 12
++	KEY_EQUAL      = 13
++	KEY_BACKSPACE  = 14
++	KEY_TAB        = 15
++	KEY_Q          = 16
++	KEY_W          = 17
++	KEY_E          = 18
++	KEY_R          = 19
++	KEY_T          = 20
++	KEY_U          = 22
++	KEY_I          = 23
++	KEY_O          = 24
++	KEY_P          = 25
++	KEY_LEFTBRACE  = 26
+ 	KEY_RIGHTBRACE = 27
+-	KEY_ENTER     = 28
+-	KEY_LEFTCTRL  = 29
+-	KEY_A         = 30
+-	KEY_S         = 31
+-	KEY_D         = 32
+-	KEY_F         = 33
+-	KEY_G         = 34
+-	KEY_H         = 35
+-	KEY_J         = 36
+-	KEY_K         = 37
+-	KEY_L         = 38
+-	KEY_SEMICOLON = 39
++	KEY_ENTER      = 28
++	KEY_LEFTCTRL   = 29
++	KEY_A          = 30
++	KEY_S          = 31
++	KEY_D          = 32
++	KEY_F          = 33
++	KEY_G          = 34
++	KEY_H          = 35
++	KEY_J          = 36
++	KEY_K          = 37
++	KEY_L          = 38
++	KEY_SEMICOLON  = 39
+ 	KEY_APOSTROPHE = 40
+-	KEY_GRAVE     = 41
+-	KEY_LEFTSHIFT = 42
+-	KEY_BACKSLASH = 43
+-	KEY_Z         = 44
+-	KEY_X         = 45
+-	KEY_C         = 46
+-	KEY_V         = 47
+-	KEY_B         = 48
+-	KEY_N         = 49
+-	KEY_M         = 50
+-	KEY_COMMA     = 51
+-	KEY_DOT       = 52
+-	KEY_SLASH     = 53
++	KEY_GRAVE      = 41
++	KEY_LEFTSHIFT  = 42
++	KEY_BACKSLASH  = 43
++	KEY_Z          = 44
++	KEY_X          = 45
++	KEY_C          = 46
++	KEY_V          = 47
++	KEY_B          = 48
++	KEY_N          = 49
++	KEY_M          = 50
++	KEY_COMMA      = 51
++	KEY_DOT        = 52
++	KEY_SLASH      = 53
+ 	KEY_RIGHTSHIFT = 54
+-	KEY_LEFTALT   = 56
+-	KEY_SPACE     = 57
+-	KEY_CAPSLOCK  = 58
+-	KEY_F1        = 59
+-	KEY_F2        = 60
+-	KEY_F3        = 61
+-	KEY_F4        = 62
+-	KEY_F5        = 63
+-	KEY_F6        = 64
+-	KEY_F7        = 65
+-	KEY_F8        = 66
+-	KEY_F9        = 67
+-	KEY_F10       = 68
+-	KEY_F11       = 87
+-	KEY_F12       = 88
+-	KEY_RIGHTCTRL = 97
+-	KEY_RIGHTALT  = 100
+-	KEY_HOME      = 102
+-	KEY_UP        = 103
+-	KEY_LEFT      = 105
+-	KEY_RIGHT     = 106
+-	KEY_END       = 107
+-	KEY_DOWN      = 108
+-	KEY_DELETE    = 111
+-	KEY_LEFTMETA  = 125
+-	KEY_RIGHTMETA = 126
+-	KEY_Y         = 21
+-	KEY_MUTE      = 113
+-	KEY_PAGEUP    = 104
+-	KEY_PAGEDOWN  = 109
+-	KEY_PLAYPAUSE = 164
++	KEY_LEFTALT    = 56
++	KEY_SPACE      = 57
++	KEY_CAPSLOCK   = 58
++	KEY_F1         = 59
++	KEY_F2         = 60
++	KEY_F3         = 61
++	KEY_F4         = 62
++	KEY_F5         = 63
++	KEY_F6         = 64
++	KEY_F7         = 65
++	KEY_F8         = 66
++	KEY_F9         = 67
++	KEY_F10        = 68
++	KEY_F11        = 87
++	KEY_F12        = 88
++	KEY_102ND      = 86
++	KEY_RIGHTCTRL  = 97
++	KEY_RIGHTALT   = 100
++	KEY_HOME       = 102
++	KEY_UP         = 103
++	KEY_LEFT       = 105
++	KEY_RIGHT      = 106
++	KEY_END        = 107
++	KEY_DOWN       = 108
++	KEY_DELETE     = 111
++	KEY_LEFTMETA   = 125
++	KEY_RIGHTMETA  = 126
++	KEY_Y          = 21
++	KEY_MUTE       = 113
++	KEY_PAGEUP     = 104
++	KEY_PAGEDOWN   = 109
++	KEY_PLAYPAUSE  = 164
+ )
+ 
+ type AccentDef struct {
+@@ -216,3 +217,29 @@ var LayoutQWERTY = [][]KeyDef{
+ 
+ // KeyGlyphs is built at runtime from config via BuildKeyGlyphs()
+ var KeyGlyphs map[int]string
++
++// Swedish XKB layout: evdev positions stay the same; X11 supplies the symbols.
++func swedishLayout() [][]KeyDef {
++	layout := make([][]KeyDef, len(LayoutQWERTY))
++	for i, row := range LayoutQWERTY {
++		layout[i] = append([]KeyDef(nil), row...)
++	}
++	labels := map[int][2]string{
++		KEY_GRAVE: {"§", "½"}, KEY_2: {"2", `"`}, KEY_4: {"4", "¤"},
++		KEY_6: {"6", "&"}, KEY_7: {"7", "/"}, KEY_8: {"8", "("}, KEY_9: {"9", ")"}, KEY_0: {"0", "="},
++		KEY_MINUS: {"+", "?"}, KEY_EQUAL: {"´", "`"},
++		KEY_LEFTBRACE: {"å", "Å"}, KEY_RIGHTBRACE: {"¨", "^"}, KEY_BACKSLASH: {"'", "*"},
++		KEY_SEMICOLON: {"ö", "Ö"}, KEY_APOSTROPHE: {"ä", "Ä"},
++		KEY_COMMA: {",", ";"}, KEY_DOT: {".", ":"}, KEY_SLASH: {"-", "_"},
++	}
++	for _, row := range layout {
++		for i := range row {
++			if v, ok := labels[row[i].Code]; ok {
++				row[i].Label, row[i].ShiftLabel = v[0], v[1]
++			}
++		}
++	}
++	bottom := layout[4]
++	layout[4] = append([]KeyDef{mod("Shift", KEY_LEFTSHIFT, 1.25, "shift"), k("<", KEY_102ND, ">")}, bottom[1:]...)
++	return layout
++}
+diff --git a/x11hints.go b/x11hints.go
+index b5e0c0e..00da950 100644
+--- a/x11hints.go
++++ b/x11hints.go
+@@ -6,6 +6,7 @@ package main
+ #include <X11/Xutil.h>
+ #include <X11/Xatom.h>
+ #include <string.h>
++#include <strings.h>
+ 
+ // Store the previously focused window so we can restore focus
+ static Window prev_focused = 0;
+@@ -133,6 +134,47 @@ int is_fullscreen_active() {
+     return result;
+ }
+ 
++static int select_overlay_allowed() {
++    Display *dpy = XOpenDisplay(NULL);
++    if (!dpy) return 0;
++
++    Window root = DefaultRootWindow(dpy);
++
++    Atom net_active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", True);
++    if (net_active == None) { XCloseDisplay(dpy); return 0; }
++
++    Atom type_ret;
++    int fmt_ret;
++    unsigned long nitems, bytes_left;
++    unsigned char *data = NULL;
++
++    if (XGetWindowProperty(dpy, root, net_active, 0, 1, False, XA_WINDOW,
++            &type_ret, &fmt_ret, &nitems, &bytes_left, &data) != Success
++            || nitems < 1 || data == NULL) {
++        if (data) XFree(data);
++        XCloseDisplay(dpy);
++        return 0;
++    }
++    Window active = *(Window *)data;
++    XFree(data);
++
++    if (active == 0 || active == root) { XCloseDisplay(dpy); return 0; }
++
++    XClassHint hint = {0};
++    XErrorHandler prev = XSetErrorHandler(x11_suppress_focus_errors);
++    int result = 0;
++    if (XGetClassHint(dpy, active, &hint) && hint.res_class) {
++        result = !strcasecmp(hint.res_class, "firefox") ||
++                 !strcasecmp(hint.res_class, "firefox-esr") ||
++                 !strcasecmp(hint.res_class, "firefox_firefox");
++    }
++    if (hint.res_name) XFree(hint.res_name);
++    if (hint.res_class) XFree(hint.res_class);
++    XSetErrorHandler(prev);
++    XCloseDisplay(dpy);
++    return result;
++}
++
+ // Check if the saved (prev_focused) window has _NET_WM_STATE_FULLSCREEN.
+ // Also checks _NET_ACTIVE_WINDOW as fallback (prev_focused sub-window may not
+ // resolve to the correct toplevel for all apps).
+@@ -522,3 +564,5 @@ func SetNoFocusHints(window *Window) {
+ 	}
+ 	C.set_no_focus_hints(C.ulong(xwin))
+ }
++
++func SelectOverlayAllowed() bool { return hasX11 && C.select_overlay_allowed() != 0 }

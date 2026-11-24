@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Gamepad OSK
+Exec=/bin/sh -c "exec @HOME@/.local/bin/gamepad-osk --daemon >>@HOME@/.local/state/gamepad-osk/osk.log 2>&1"
+Terminal=false

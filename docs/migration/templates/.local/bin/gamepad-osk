@@ -1,0 +1,5 @@
+#!/bin/sh
+export GAMEPAD_OSK_LAYOUT=se
+export SDL_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR=0
+export LD_LIBRARY_PATH="@HOME@/.local/opt/gamepad-osk/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec "@HOME@/.local/opt/gamepad-osk/gamepad-osk" "$@"

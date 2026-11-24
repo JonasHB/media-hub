@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gamecontroller configversion="19" appversion="3.1.4">
+  <profilename>Nestopia (ingen Xbox-mus)</profilename>
+  <sets>
+    <set index="1" />
+  </sets>
+</gamecontroller>
