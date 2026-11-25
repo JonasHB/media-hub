@@ -3,6 +3,7 @@
   "settings": {
     "fps": 60,
     "animations": true,
+    "startup_tile": "svt-play",
     "language": "sv",
     "exit_combo": [
       "left_shoulder",
@@ -61,6 +62,23 @@
           }
         },
         {
+          "id": "svt-play",
+          "title": "SVT Play",
+          "launch": {
+            "command": [
+              "firefox",
+              "--new-window",
+              "https://www.svtplay.se/"
+            ]
+          },
+          "handover": {
+            "type": "window",
+            "window_class": "Navigator firefox_firefox",
+            "profile": "firefox",
+            "start_timeout_ms": 20000
+          }
+        },
+        {
           "id": "disney-plus",
           "title": "Disney+",
           "launch": {
@@ -85,23 +103,6 @@
               "firefox",
               "--new-window",
               "https://www.primevideo.com/"
-            ]
-          },
-          "handover": {
-            "type": "window",
-            "window_class": "Navigator firefox_firefox",
-            "profile": "firefox",
-            "start_timeout_ms": 20000
-          }
-        },
-        {
-          "id": "svt-play",
-          "title": "SVT Play",
-          "launch": {
-            "command": [
-              "firefox",
-              "--new-window",
-              "https://www.svtplay.se/"
             ]
           },
           "handover": {

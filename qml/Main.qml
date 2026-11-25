@@ -247,6 +247,11 @@ Window {
         }
 
         Component.onCompleted: {
+            if (root.settings.startup_tile) {
+                var index = root.currentItems.findIndex(function(item) { return item.id === root.settings.startup_tile })
+                if (index >= 0)
+                    root.setTileIndex(index)
+            }
             keyLayer.forceActiveFocus()
             root.centerSelection()
         }

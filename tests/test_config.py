@@ -40,6 +40,7 @@ def test_example_config_is_valid():
     assert [c["id"] for c in config["categories"]] == ["streaming", "games"]
     settings = dict(config["settings"])
     settings.pop("screensaver")
+    assert settings.pop("startup_tile") == "svt-play"
     assert settings == {
         "fps": 60,
         "animations": True,
@@ -260,3 +261,13 @@ def test_streaming_logos_fall_back_when_local_icon_is_missing(tmp_path):
     custom.parent.mkdir()
     custom.touch()
     assert find_item(validate(raw, tmp_path), "youtube")["icon"] == str(custom)
+
+
+def test_startup_tile_is_optional(tmp_path):
+    assert validate(minimal_config(), tmp_path)["settings"].get("startup_tile") is None
+
+
+@pytest.mark.parametrize("tile", [False, "", "missing"])
+def test_invalid_startup_tile(tmp_path, tile):
+    with pytest.raises(ConfigError, match=r"settings\.startup_tile"):
+        validate(minimal_config(settings={"startup_tile": tile}), tmp_path)

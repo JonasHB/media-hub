@@ -161,6 +161,7 @@ samtidigt. Relativa sökvägar tolkas relativt konfigurationsfilen, `~` expander
 - `theme` per kategori är en accentfärg (`#4d9dff`, `#f2a54a`, ...) som styr
   fokusram, glöd och kategoristreck. Utan tema används blått.
 - `screensaver` styr foto-skärmsläckaren, se nedan.
+- `settings.startup_tile` väljer vilket kakel i första kategorin som markeras vid start, utan att ändra ordningen. Utelämna för att markera första kaklet.
 - `settings.animations: false` stänger av rörliga partiklar och övergångar;
   `settings.fps: 30` ger färre partiklar och lämpar sig för 4K/30 Hz-läget.
 

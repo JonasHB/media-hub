@@ -31,6 +31,10 @@ from mediahub.system import SystemActions
 from mediahub.steam import SteamGame, apply_steam_library
 
 config = load_config('config/example.json')
+assert [item['id'] for item in config['categories'][0]['items']] == [
+    'youtube', 'netflix', 'svt-play', 'disney-plus', 'prime-video'
+]
+assert config['settings']['startup_tile'] == 'svt-play'
 config['categories'][1]['subcategories'].extend([
     {'id': 'wii', 'title': 'Wii', 'items': []},
     {'id': 'other', 'title': 'Other', 'items': []},
@@ -70,6 +74,12 @@ for key, value in values.items():
 engine.load(QUrl.fromLocalFile('qml/Main.qml'))
 window = engine.rootObjects()[0]
 QTest.qWait(50)
+assert window.property('selectedTile').toVariant()['id'] == 'svt-play'
+QTest.keyClick(window, Qt.Key_Right)
+assert window.property('selectedTile').toVariant()['id'] == 'disney-plus'
+QTest.keyClick(window, Qt.Key_Left)
+QTest.keyClick(window, Qt.Key_Left)
+assert window.property('selectedTile').toVariant()['id'] == 'netflix'
 def image_for(parent, name):
     for child in parent.childItems():
         source = child.property('source')

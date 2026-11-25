@@ -153,6 +153,9 @@ def validate(raw: Any, base_dir: Path) -> dict:
 
     settings = _validate_settings(v, cfg.get("settings", {}), "settings", base_dir)
     categories = _validate_categories(v, cfg.get("categories"), base_dir)
+    startup_tile = settings.get("startup_tile")
+    if startup_tile and categories and all(item["id"] != startup_tile for item in categories[0]["items"]):
+        v.err("settings.startup_tile", "must name a tile in the first category")
     category_ids = {category["id"] for category in iter_categories(categories)}
     emulators = _validate_emulators(v, cfg.get("emulators"), base_dir, category_ids)
 
@@ -172,7 +175,7 @@ def _validate_settings(v: _Validator, value: Any, path: str, base_dir: Path) -> 
     if obj is None:
         return {"fps": 60, "animations": True}
 
-    v.unknown_keys(obj, {"fps", "animations", "language", "exit_combo", "screensaver"}, path)
+    v.unknown_keys(obj, {"fps", "animations", "language", "exit_combo", "screensaver", "startup_tile"}, path)
 
     fps = obj.get("fps", 60)
     if fps not in (30, 60):
@@ -183,6 +186,13 @@ def _validate_settings(v: _Validator, value: Any, path: str, base_dir: Path) -> 
     language = obj.get("language", "sv")
     if language not in ("sv", "en"):
         v.err(_join(path, "language"), "must be 'sv' or 'en'")
+
+    startup_tile = None
+    if "startup_tile" in obj:
+        startup_tile = obj["startup_tile"]
+        if not isinstance(startup_tile, str) or not startup_tile.strip():
+            v.err(_join(path, "startup_tile"), "must be a nonempty tile ID")
+            startup_tile = None
 
     exit_combo = _validate_exit_combo(v, obj.get("exit_combo"), _join(path, "exit_combo"))
     screensaver = _validate_screensaver(
@@ -195,6 +205,7 @@ def _validate_settings(v: _Validator, value: Any, path: str, base_dir: Path) -> 
         "language": language if language in ("sv", "en") else "sv",
         "exit_combo": exit_combo,
         "screensaver": screensaver,
+        "startup_tile": startup_tile,
     }
 
 
